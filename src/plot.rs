@@ -51,7 +51,7 @@ impl Default for PlotConfig {
             size: (640, 480),
 
             ranges: (0_f32..24_f32, 0..300),
-            num_labels: (6, 4),
+            num_labels: (6, 8),
             label_size: (20, 30),
 
             caption_font_size: 30,
