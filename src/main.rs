@@ -1,0 +1,34 @@
+use std::{env, error::Error, path::PathBuf};
+
+use chrono::Local;
+use clap::{arg, command, value_parser};
+
+use crate::{deserialize::prelude::*, plot::prelude::*};
+
+mod deserialize;
+mod plot;
+
+fn main() -> Result<(), Box<dyn Error>> {
+    let matches = command!()
+        .arg(
+            arg!(
+                -i <INPUT_FILE> "Input file (csv)"
+            )
+            .required(true)
+            .value_parser(value_parser!(PathBuf)),
+        )
+        .arg(
+            arg!(
+                -o <OUTPUT_DIR> "Output directory"
+            )
+            .required(true)
+            .value_parser(value_parser!(PathBuf)),
+        )
+        .get_matches();
+
+    let input_path = matches.get_one::<PathBuf>("INPUT_FILE").unwrap();
+    let readings = GlucoseReadingsMap::from_file_path(input_path, &Local::now())?;
+
+    let output_dir = matches.get_one::<PathBuf>("OUTPUT_DIR").unwrap();
+    plot_to_svg(readings, PlotConfig::default(), output_dir)
+}
