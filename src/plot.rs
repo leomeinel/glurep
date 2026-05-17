@@ -23,7 +23,7 @@ pub(crate) struct PlotConfig {
     size: (u32, u32),
 
     /// Ranges of axes `(x, y)`.
-    ranges: (Range<f32>, Range<u32>),
+    axes_ranges: (Range<f32>, Range<u32>),
     /// Number of labels for axes `(x, y)`.
     num_labels: (usize, usize),
     /// Size of labels for axes `(x, y)` in pixels.
@@ -35,14 +35,25 @@ pub(crate) struct PlotConfig {
     /// Radius of a single plotted point in pixels.
     point_radius: u32,
 
-    /// Glucose limits `(low, high)`.
+    /// Glucose target range.
     ///
     /// ## Note
     ///
-    /// - `low` will be displayed in [`RED`].
-    /// - `high` will be displayed in [`YELLOW`].
-    /// - anything else will be displayed in [`BLUE`].
-    limits: (u32, u32),
+    /// - anything in range is displayed in [`BLUE`].
+    /// - anything below the range is displayed in [`RED`].
+    /// - anything above the range is displayed in [`RED`].
+    glucose_target_range: Range<u32>,
+}
+impl PlotConfig {
+    fn measurement_color(&self, measurement: u32) -> RGBColor {
+        if measurement < self.glucose_target_range.start {
+            return RED;
+        } else if measurement <= self.glucose_target_range.end {
+            return BLUE;
+        } else {
+            return YELLOW;
+        }
+    }
 }
 impl Default for PlotConfig {
     fn default() -> Self {
@@ -50,14 +61,14 @@ impl Default for PlotConfig {
             margin: 10,
             size: (640, 480),
 
-            ranges: (0_f32..24_f32, 0..300),
+            axes_ranges: (0_f32..24_f32, 0..300),
             num_labels: (6, 8),
             label_size: (20, 30),
 
             caption_font_size: 30,
 
             point_radius: 4,
-            limits: (80, 180),
+            glucose_target_range: 80..180,
         }
     }
 }
@@ -65,11 +76,11 @@ impl Default for PlotConfig {
 /// Plot [`GlucoseReadingsMap`] to svg.
 pub(crate) fn plot_to_svg(
     readings: GlucoseReadingsMap,
+    output_path: &PathBuf,
     config: PlotConfig,
-    output_dir: &PathBuf,
 ) -> Result<(), Box<dyn Error>> {
     for (date, readings) in readings.0 {
-        let output_path = output_dir.join(format!("{}.svg", date));
+        let output_path = output_path.join(format!("{}.svg", date));
         let root = SVGBackend::new(&output_path, config.size).into_drawing_area();
         root.margin(config.margin, config.margin, config.margin, config.margin);
 
@@ -81,7 +92,7 @@ pub(crate) fn plot_to_svg(
             )
             .x_label_area_size(config.label_size.0)
             .y_label_area_size(config.label_size.1)
-            .build_cartesian_2d(config.ranges.0.clone(), config.ranges.1.clone())?;
+            .build_cartesian_2d(config.axes_ranges.0.clone(), config.axes_ranges.1.clone())?;
         chart
             .configure_mesh()
             .x_labels(config.num_labels.0)
@@ -103,14 +114,7 @@ pub(crate) fn plot_to_svg(
             })
             .collect();
         chart.draw_series(readings.iter().map(|(x, y)| {
-            let (low, high) = config.limits;
-            let color = if *y <= low {
-                RED
-            } else if *y <= high {
-                BLUE
-            } else {
-                YELLOW
-            };
+            let color = config.measurement_color(*y);
             return EmptyElement::at((*x, *y))
                 + Circle::new((0, 0), config.point_radius, color.filled());
         }))?;

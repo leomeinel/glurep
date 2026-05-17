@@ -28,6 +28,6 @@ fn main() -> Result<(), Box<dyn Error>> {
     let input_path = matches.get_one::<PathBuf>("INPUT_FILE").unwrap();
     let readings = GlucoseReadingsMap::from_file_path(input_path)?;
 
-    let output_dir = matches.get_one::<PathBuf>("OUTPUT_DIR").unwrap();
-    plot_to_svg(readings, PlotConfig::default(), output_dir)
+    let output_path = matches.get_one::<PathBuf>("OUTPUT_DIR").unwrap();
+    plot_to_svg(readings, output_path, PlotConfig::default())
 }

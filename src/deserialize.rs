@@ -15,6 +15,7 @@ use std::{
 };
 
 use chrono::{NaiveDate, NaiveDateTime, NaiveTime};
+use csv::ReaderBuilder;
 use serde::Deserialize;
 
 /// Map of [`NaiveDate`] to [`GlucoseReading`]s of that day.
@@ -25,21 +26,19 @@ impl GlucoseReadingsMap {
     ///
     /// See the [`format::strftime` module](chrono::format::strftime) for supported format
     /// sequences.
-    const DATE_FMT: &str = "%d.%m.%YT%H:%M";
+    const DATE_TIME_FMT: &str = "%d.%m.%YT%H:%M";
 
     /// Deserialize file at `file_path` with `time` used to determine timezone and construct [`GlucoseReadingsMap`].
     pub(crate) fn from_file_path(
-        file_path: &PathBuf,
+        input_path: &PathBuf,
     ) -> Result<GlucoseReadingsMap, Box<dyn Error>> {
         let mut readings: GlucoseReadingsMap = GlucoseReadingsMap::default();
 
-        let mut reader = csv::ReaderBuilder::new()
-            .delimiter(b';')
-            .from_path(file_path)?;
+        let mut reader = ReaderBuilder::new().delimiter(b';').from_path(input_path)?;
         for result in reader.deserialize() {
             let record: SiDiaryRecord = result?;
             let date_time = format!("{}T{}", record.day, record.time);
-            let date_time = NaiveDateTime::parse_from_str(date_time.as_str(), Self::DATE_FMT)?;
+            let date_time = NaiveDateTime::parse_from_str(date_time.as_str(), Self::DATE_TIME_FMT)?;
 
             if let Some(measurement) = record.udt_cgms {
                 readings
