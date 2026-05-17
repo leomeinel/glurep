@@ -66,7 +66,7 @@ impl Default for PlotConfig {
         Self {
             size: (640, 480),
 
-            y_spec: 0..300,
+            y_spec: 40..300,
             num_labels: (6, 8),
             label_size: (20, 40),
 
