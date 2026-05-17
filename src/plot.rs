@@ -4,10 +4,10 @@ pub(crate) mod prelude {
 
 use std::{collections::HashSet, error::Error, ops::Range, path::PathBuf};
 
-use chrono::{NaiveTime, Timelike};
+use jiff::{Span, civil::Time};
 use plotters::{prelude::*, style::full_palette::*};
 
-use crate::deserialize::prelude::*;
+use crate::{deserialize::prelude::*, utils::prelude::*};
 
 /// Error if an invalid time is processed from the csv.
 const ERR_INVALID_TIME: &str = "Invalid time. Aborting.";
@@ -108,9 +108,10 @@ pub(crate) fn plot_to_svg(
             // FIXME: We should use fixed positions/deltas for labels. I however haven't found a way to do that.
             .x_labels(config.num_labels.0)
             .x_label_formatter(&|x| {
-                NaiveTime::from_num_seconds_from_midnight_opt(*x, 0)
+                Time::midnight()
+                    .checked_add(Span::new().seconds(*x))
                     .expect(ERR_INVALID_TIME)
-                    .format("%H:%M")
+                    .strftime("%H:%M")
                     .to_string()
             })
             .y_labels(config.num_labels.1)
@@ -130,7 +131,7 @@ pub(crate) fn plot_to_svg(
 
         let readings: HashSet<_> = readings
             .iter()
-            .map(|r| (r.time.num_seconds_from_midnight(), r.measurement))
+            .map(|r| (num_seconds_from_midnight(&r.time), r.measurement))
             .collect();
         chart.draw_series(readings.iter().map(|(x, y)| {
             let color = config.measurement_color(*y);

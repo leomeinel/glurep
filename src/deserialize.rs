@@ -14,20 +14,14 @@ use std::{
     path::PathBuf,
 };
 
-use chrono::{NaiveDate, NaiveDateTime, NaiveTime};
 use csv::ReaderBuilder;
+use jiff::civil::{Date, Time};
 use serde::Deserialize;
 
 /// Map of [`NaiveDate`] to [`GlucoseReading`]s of that day.
 #[derive(Default, Debug)]
-pub(crate) struct GlucoseReadingsMap(pub(crate) HashMap<NaiveDate, HashSet<GlucoseReading>>);
+pub(crate) struct GlucoseReadingsMap(pub(crate) HashMap<Date, HashSet<GlucoseReading>>);
 impl GlucoseReadingsMap {
-    /// Date and time format used while deserializing [`SiDiaryRecord`].
-    ///
-    /// See the [`format::strftime` module](chrono::format::strftime) for supported format
-    /// sequences.
-    const DATE_TIME_FMT: &str = "%d.%m.%YT%H:%M";
-
     /// Deserialize file at `file_path` with `time` used to determine timezone and construct [`GlucoseReadingsMap`].
     pub(crate) fn from_file_path(
         input_path: &PathBuf,
@@ -37,15 +31,15 @@ impl GlucoseReadingsMap {
         let mut reader = ReaderBuilder::new().delimiter(b';').from_path(input_path)?;
         for result in reader.deserialize() {
             let record: SiDiaryRecord = result?;
-            let date_time = format!("{}T{}", record.day, record.time);
-            let date_time = NaiveDateTime::parse_from_str(date_time.as_str(), Self::DATE_TIME_FMT)?;
+            let date = Date::strptime("%d.%m.%Y", record.day)?;
+            let time = Time::strptime("%H:%M", record.time)?;
 
             if let Some(measurement) = record.udt_cgms {
                 readings
                     .0
-                    .entry(date_time.date())
+                    .entry(date)
                     .or_default()
-                    .insert(GlucoseReading::from(date_time).with_measurement(measurement));
+                    .insert(GlucoseReading::new(time, measurement));
             }
         }
 
@@ -57,24 +51,13 @@ impl GlucoseReadingsMap {
 #[derive(Default, Debug, Hash, PartialEq, Eq, PartialOrd, Ord)]
 pub(crate) struct GlucoseReading {
     /// Time of day the reading was taken.
-    pub(crate) time: NaiveTime,
+    pub(crate) time: Time,
     /// Glucose measurement in `mg/dL`.
     pub(crate) measurement: u32,
 }
-impl From<NaiveDateTime> for GlucoseReading {
-    fn from(date_time: NaiveDateTime) -> Self {
-        Self {
-            time: date_time.time(),
-            ..Default::default()
-        }
-    }
-}
 impl GlucoseReading {
-    pub(crate) fn with_measurement(self, measurement: u32) -> Self {
-        Self {
-            measurement,
-            ..self
-        }
+    pub(crate) fn new(time: Time, measurement: u32) -> Self {
+        Self { time, measurement }
     }
 }
 

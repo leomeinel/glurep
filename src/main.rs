@@ -6,6 +6,7 @@ use crate::{deserialize::prelude::*, plot::prelude::*};
 
 mod deserialize;
 mod plot;
+mod utils;
 
 fn main() -> Result<(), Box<dyn Error>> {
     let matches = command!()
