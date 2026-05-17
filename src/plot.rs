@@ -5,12 +5,15 @@ pub(crate) mod prelude {
 use std::{error::Error, ops::Range, path::PathBuf};
 
 use chrono::{NaiveTime, Timelike};
-use plotters::prelude::*;
+use plotters::{prelude::*, style::full_palette::*};
 
 use crate::deserialize::prelude::*;
 
 /// Error if an invalid time is processed from the csv.
 const ERR_INVALID_TIME: &str = "Invalid time. Aborting.";
+
+/// Description for the y axis.
+const Y_DESC: &str = "mg/dL";
 
 /// Config for plotting [`GlucoseReadingsMap`] to svg.
 #[derive(Clone, Debug)]
@@ -52,11 +55,11 @@ pub(crate) struct PlotConfig {
 impl PlotConfig {
     fn measurement_color(&self, measurement: u32) -> RGBColor {
         if measurement <= self.glucose_target_range.start {
-            return RED;
+            return RED_300;
         } else if measurement < self.glucose_target_range.end {
-            return BLUE;
+            return CYAN_300;
         } else {
-            return YELLOW;
+            return ORANGE_300;
         }
     }
 }
@@ -68,7 +71,7 @@ impl Default for PlotConfig {
 
             axes_ranges: (0..(24 * 3600), 0..300),
             num_labels: (6, 8),
-            label_size: (20, 30),
+            label_size: (20, 40),
 
             caption_font_size: 30,
 
@@ -102,14 +105,16 @@ pub(crate) fn plot_to_svg(
             .build_cartesian_2d(x_spec.clone(), y_spec)?;
         chart
             .configure_mesh()
+            // FIXME: We should use fixed positions/deltas for labels. I however haven't found a way to do that.
             .x_labels(config.num_labels.0)
-            .y_labels(config.num_labels.1)
             .x_label_formatter(&|x| {
                 NaiveTime::from_num_seconds_from_midnight_opt(*x, 0)
                     .expect(ERR_INVALID_TIME)
                     .format("%H:%M")
                     .to_string()
             })
+            .y_labels(config.num_labels.1)
+            .y_desc(Y_DESC)
             .draw()?;
 
         let target_range = config.glucose_target_range.clone();
