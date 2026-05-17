@@ -22,7 +22,7 @@ use serde::Deserialize;
 #[derive(Default, Debug)]
 pub(crate) struct GlucoseReadingsMap(pub(crate) HashMap<NaiveDate, HashSet<GlucoseReading>>);
 impl GlucoseReadingsMap {
-    /// Date format used while deserializing [`SiDiaryRecord`].
+    /// Date and time format used while deserializing [`SiDiaryRecord`].
     ///
     /// See the [`format::strftime` module](chrono::format::strftime) for supported format
     /// sequences.
