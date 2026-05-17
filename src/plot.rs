@@ -2,7 +2,7 @@ pub(crate) mod prelude {
     pub(crate) use super::{PlotConfig, plot_to_svg};
 }
 
-use std::{error::Error, ops::Range, path::PathBuf};
+use std::{collections::HashSet, error::Error, ops::Range, path::PathBuf};
 
 use chrono::{NaiveTime, Timelike};
 use plotters::{prelude::*, style::full_palette::*};
@@ -128,7 +128,7 @@ pub(crate) fn plot_to_svg(
             config.measurement_color(target_range.start),
         ))?;
 
-        let readings: Vec<_> = readings
+        let readings: HashSet<_> = readings
             .iter()
             .map(|r| (r.time.num_seconds_from_midnight(), r.measurement))
             .collect();
