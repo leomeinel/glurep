@@ -23,7 +23,12 @@ pub(crate) struct PlotConfig {
     size: (u32, u32),
 
     /// Ranges of axes `(x, y)`.
-    axes_ranges: (Range<f32>, Range<u32>),
+    ///
+    /// ## Note
+    ///
+    /// - The range for x axis is in seconds.
+    /// - The range for y axis is in `mg/dL`.
+    axes_ranges: (Range<u32>, Range<u32>),
     /// Number of labels for axes `(x, y)`.
     num_labels: (usize, usize),
     /// Size of labels for axes `(x, y)` in pixels.
@@ -61,7 +66,7 @@ impl Default for PlotConfig {
             margin: 10,
             size: (640, 480),
 
-            axes_ranges: (0_f32..24_f32, 0..300),
+            axes_ranges: (0..(24 * 3600), 0..300),
             num_labels: (6, 8),
             label_size: (20, 30),
 
@@ -98,8 +103,7 @@ pub(crate) fn plot_to_svg(
             .x_labels(config.num_labels.0)
             .y_labels(config.num_labels.1)
             .x_label_formatter(&|x| {
-                let seconds = (x * 3600.) as u32;
-                NaiveTime::from_num_seconds_from_midnight_opt(seconds, 0)
+                NaiveTime::from_num_seconds_from_midnight_opt(*x, 0)
                     .expect(ERR_INVALID_TIME)
                     .format("%H:%M")
                     .to_string()
@@ -108,10 +112,7 @@ pub(crate) fn plot_to_svg(
 
         let readings: Vec<_> = readings
             .iter()
-            .map(|r| {
-                let hours = r.time.num_seconds_from_midnight() as f32 / 3600.;
-                (hours, r.measurement)
-            })
+            .map(|r| (r.time.num_seconds_from_midnight(), r.measurement))
             .collect();
         chart.draw_series(readings.iter().map(|(x, y)| {
             let color = config.measurement_color(*y);
