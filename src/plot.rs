@@ -51,9 +51,9 @@ pub(crate) struct PlotConfig {
 }
 impl PlotConfig {
     fn measurement_color(&self, measurement: u32) -> RGBColor {
-        if measurement < self.glucose_target_range.start {
+        if measurement <= self.glucose_target_range.start {
             return RED;
-        } else if measurement <= self.glucose_target_range.end {
+        } else if measurement < self.glucose_target_range.end {
             return BLUE;
         } else {
             return YELLOW;
@@ -89,6 +89,8 @@ pub(crate) fn plot_to_svg(
         let root = SVGBackend::new(&output_path, config.size).into_drawing_area();
         root.margin(config.margin, config.margin, config.margin, config.margin);
 
+        let x_spec = config.axes_ranges.0.clone();
+        let y_spec = config.axes_ranges.1.clone();
         let caption = date.to_string();
         let mut chart = ChartBuilder::on(&root)
             .caption(
@@ -97,7 +99,7 @@ pub(crate) fn plot_to_svg(
             )
             .x_label_area_size(config.label_size.0)
             .y_label_area_size(config.label_size.1)
-            .build_cartesian_2d(config.axes_ranges.0.clone(), config.axes_ranges.1.clone())?;
+            .build_cartesian_2d(x_spec.clone(), y_spec)?;
         chart
             .configure_mesh()
             .x_labels(config.num_labels.0)
@@ -109,6 +111,17 @@ pub(crate) fn plot_to_svg(
                     .to_string()
             })
             .draw()?;
+
+        let target_range = config.glucose_target_range.clone();
+        let x_points = [x_spec.start, x_spec.end];
+        chart.draw_series(LineSeries::new(
+            x_points.map(|x| (x, target_range.end)),
+            config.measurement_color(target_range.end),
+        ))?;
+        chart.draw_series(LineSeries::new(
+            x_points.map(|x| (x, target_range.start)),
+            config.measurement_color(target_range.start),
+        ))?;
 
         let readings: Vec<_> = readings
             .iter()
