@@ -1,6 +1,5 @@
 use std::{env, error::Error, path::PathBuf};
 
-use chrono::Local;
 use clap::{arg, command, value_parser};
 
 use crate::{deserialize::prelude::*, plot::prelude::*};
@@ -27,7 +26,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         .get_matches();
 
     let input_path = matches.get_one::<PathBuf>("INPUT_FILE").unwrap();
-    let readings = GlucoseReadingsMap::from_file_path(input_path, &Local::now())?;
+    let readings = GlucoseReadingsMap::from_file_path(input_path)?;
 
     let output_dir = matches.get_one::<PathBuf>("OUTPUT_DIR").unwrap();
     plot_to_svg(readings, PlotConfig::default(), output_dir)

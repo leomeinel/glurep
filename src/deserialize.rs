@@ -14,7 +14,7 @@ use std::{
     path::PathBuf,
 };
 
-use chrono::{DateTime, FixedOffset, Local, NaiveDate, NaiveTime};
+use chrono::{NaiveDate, NaiveDateTime, NaiveTime};
 use serde::Deserialize;
 
 /// Map of [`NaiveDate`] to [`GlucoseReading`]s of that day.
@@ -25,12 +25,11 @@ impl GlucoseReadingsMap {
     ///
     /// See the [`format::strftime` module](chrono::format::strftime) for supported format
     /// sequences.
-    const RAW_DATE_FMT: &str = "%d.%m.%YT%H:%M%z";
+    const DATE_FMT: &str = "%d.%m.%YT%H:%M";
 
     /// Deserialize file at `file_path` with `time` used to determine timezone and construct [`GlucoseReadingsMap`].
     pub(crate) fn from_file_path(
         file_path: &PathBuf,
-        time: &DateTime<Local>,
     ) -> Result<GlucoseReadingsMap, Box<dyn Error>> {
         let mut readings: GlucoseReadingsMap = GlucoseReadingsMap::default();
 
@@ -39,13 +38,13 @@ impl GlucoseReadingsMap {
             .from_path(file_path)?;
         for result in reader.deserialize() {
             let record: SiDiaryRecord = result?;
-            let date_time = format!("{}T{}{}", record.day, record.time, time.offset());
-            let date_time = DateTime::parse_from_str(date_time.as_str(), Self::RAW_DATE_FMT)?;
+            let date_time = format!("{}T{}", record.day, record.time);
+            let date_time = NaiveDateTime::parse_from_str(date_time.as_str(), Self::DATE_FMT)?;
 
             if let Some(measurement) = record.udt_cgms {
                 readings
                     .0
-                    .entry(date_time.date_naive())
+                    .entry(date_time.date())
                     .or_default()
                     .insert(GlucoseReading::from(date_time).with_measurement(measurement));
             }
@@ -63,8 +62,8 @@ pub(crate) struct GlucoseReading {
     /// Glucose measurement in `mg/dL`.
     pub(crate) measurement: u32,
 }
-impl From<DateTime<FixedOffset>> for GlucoseReading {
-    fn from(date_time: DateTime<FixedOffset>) -> Self {
+impl From<NaiveDateTime> for GlucoseReading {
+    fn from(date_time: NaiveDateTime) -> Self {
         Self {
             time: date_time.time(),
             ..Default::default()
