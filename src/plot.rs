@@ -9,7 +9,10 @@ use jiff::{
     Span,
     civil::{Date, Time},
 };
-use plotters::{prelude::*, style::full_palette::*};
+use plotters::{
+    prelude::*,
+    style::full_palette::{CYAN_300, ORANGE_300, RED_300},
+};
 
 use crate::{deserialize::prelude::*, log::prelude::*, utils::prelude::*};
 
@@ -141,6 +144,7 @@ pub(crate) fn plot_to_strings(
         {
             let backend = SVGBackend::with_string(&mut svg, SVG_SIZE);
             let root = backend.into_drawing_area();
+            root.fill(&WHITE)?;
 
             let mut chart = ChartBuilder::on(&root)
                 .x_label_area_size(config.label_size.0)

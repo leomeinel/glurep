@@ -56,6 +56,5 @@ The following showcase has been generated with:
 ```sh
 glurep --svg ./input.csv ./output/
 ```
-<div style="background-color: white">
-    <img src="https://github.com/leomeinel/glurep/blob/main/static/showcase.svg?raw=true" width="400" alt="glucose levels in a colored 2d chart">
-</div>
+
+<img src="https://github.com/leomeinel/glurep/blob/main/static/showcase.svg?raw=true" width="400" alt="glucose levels in a colored 2d chart">
