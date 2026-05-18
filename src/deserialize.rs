@@ -66,5 +66,7 @@ pub(crate) fn readings_map(input_path: &PathBuf) -> Result<GlucoseReadingsMap, B
         }
     }
 
+    assert!(readings_map.0.len() > 0);
+
     Ok(readings_map)
 }

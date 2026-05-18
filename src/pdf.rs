@@ -88,9 +88,12 @@ pub(crate) fn svgs_to_pdf_bytes(
         pages.push(PdfPage::new(page_width, page_height, ops));
     }
 
+    assert!(pages.len() > 0);
     let bytes = doc
         .with_pages(pages)
         .save(&PdfSaveOptions::default(), &mut Vec::new());
+    assert!(bytes.len() > 0);
+
     Ok(bytes)
 }
 
