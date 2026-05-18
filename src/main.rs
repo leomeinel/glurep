@@ -16,13 +16,12 @@ fn main() -> Result<(), Box<dyn Error>> {
     let output_path = args.get_one::<PathBuf>("OUTPUT_FILE").unwrap();
     let patient_name = args.get_one::<String>("patient_name").unwrap();
     let plot_config = PlotConfig::from(&args);
+    let page_config = PageConfig::from(&args);
 
     let readings_map = readings_map(input_path)?;
     let svgs = plot_to_strings(&readings_map, &plot_config)?;
 
-    let page_config = PageConfig::from(plot_config);
-    let doc_name = doc_name(&readings_map, patient_name.as_str());
-    let pdf_bytes = svgs_to_pdf_bytes(svgs, page_config, doc_name.as_str())?;
+    let pdf_bytes = svgs_to_pdf_bytes(svgs, page_config, patient_name.as_str())?;
     fs::write(output_path, pdf_bytes)?;
 
     Ok(())
@@ -47,6 +46,16 @@ fn arg_matches() -> ArgMatches {
                 .id("size_y"),
         )
         .arg(
+            arg!(-m --margin [margin] "Margin of the output pdf in `mm`")
+                .value_parser(value_parser!(u32))
+                .id("margin"),
+        )
+        .arg(
+            arg!(--hfs [header_font_size] "Header font size in `pt`")
+                .value_parser(value_parser!(f32))
+                .id("header_font_size"),
+        )
+        .arg(
             arg!(--"min-y" [max_y] "Minimum y value in `mg/dL`")
                 .value_parser(value_parser!(u32))
                 .id("min_y_spec"),
@@ -67,22 +76,17 @@ fn arg_matches() -> ArgMatches {
                 .id("num_labels_y"),
         )
         .arg(
-            arg!(--sx --"size-x" [label_size_x] "Size of x labels in pixels")
+            arg!(--sx --"size-x" [label_size_x] "X label size approximately in `mm`")
                 .value_parser(value_parser!(u32))
                 .id("label_size_x"),
         )
         .arg(
-            arg!(--sy --"size-y" [label_size_y] "Size of y labels in pixels")
+            arg!(--sy --"size-y" [label_size_y] "Y label size approximately in `mm`")
                 .value_parser(value_parser!(u32))
                 .id("label_size_y"),
         )
         .arg(
-            arg!(--cfs [font_size] "Caption font size")
-                .value_parser(value_parser!(u32))
-                .id("caption_font_size"),
-        )
-        .arg(
-            arg!(-r --radius [radius] "Radius of a single point in pixels")
+            arg!(-r --radius [radius] "Radius of a single point approximately in `mm`")
                 .value_parser(value_parser!(u32))
                 .id("point_radius"),
         )

@@ -1,17 +1,25 @@
 pub(crate) mod prelude {
-    pub(crate) use super::{PlotConfig, plot_to_strings};
+    pub(crate) use super::{PlotConfig, SVG_SIZE, SvgData, plot_to_strings};
 }
 
-use std::{collections::HashSet, error::Error, ops::Range};
+use std::{cmp::Ordering, collections::HashSet, error::Error, ops::Range};
 
 use clap::ArgMatches;
-use jiff::{Span, civil::Time};
+use jiff::{
+    Span,
+    civil::{Date, Time},
+};
 use plotters::{prelude::*, style::full_palette::*};
 
 use crate::{deserialize::prelude::*, log::prelude::*, utils::prelude::*};
 
-/// Chart margin in pixels.
-const CHART_MARGIN: u32 = 10;
+/// Size of the svg `(x, y)` in pixels.
+///
+/// This can be approximated to `mm` of the output pdf.
+pub(crate) const SVG_SIZE: (u32, u32) = (640, 640);
+
+/// Plotting font.
+const PLOTTING_FONT: (&str, u32) = ("Helvetica", 14);
 /// Spec of `x` axis in seconds.
 const X_SPEC: Range<u32> = 0..(24 * 3600);
 /// Description for the y axis.
@@ -20,22 +28,18 @@ const Y_DESC: &str = "mg/dL";
 /// Config for plotting [`GlucoseReadingsMap`] to svg.
 #[derive(Clone, Debug)]
 pub(crate) struct PlotConfig {
-    /// Size of the drawing area `(x, y)` in pixels.
-    ///
-    /// This is equivalent to the size of the resulting svg.
-    pub(crate) size: (u32, u32),
-
-    /// Spec of `y` axis in `mg/dL`.
+    /// `y` axis spec in `mg/dL`.
     pub(crate) y_spec: Range<u32>,
     /// Number of labels for axes `(x, y)`.
     pub(crate) num_labels: (usize, usize),
-    /// Size of labels for axes `(x, y)` in pixels.
+    /// Label size for axes `(x, y)` in pixels.
+    ///
+    /// This can be approximated to `mm` of the output pdf.
     pub(crate) label_size: (u32, u32),
 
-    /// Caption font size.
-    pub(crate) caption_font_size: u32,
-
     /// Radius of a single plotted point in pixels.
+    ///
+    /// This can be approximated to `mm` of the output pdf.
     pub(crate) point_radius: u32,
 
     /// Glucose target range.
@@ -61,13 +65,9 @@ impl PlotConfig {
 impl Default for PlotConfig {
     fn default() -> Self {
         Self {
-            size: (640, 480),
-
-            y_spec: 40..300,
+            y_spec: 40..310,
             num_labels: (6, 8),
             label_size: (20, 40),
-
-            caption_font_size: 18,
 
             point_radius: 4,
             glucose_threshold: 80..180,
@@ -77,8 +77,6 @@ impl Default for PlotConfig {
 impl From<&ArgMatches> for PlotConfig {
     fn from(matches: &ArgMatches) -> Self {
         let mut config = PlotConfig::default();
-        matches.get_one::<u32>("size_x").map(|&x| config.size.0 = x);
-        matches.get_one::<u32>("size_y").map(|&y| config.size.1 = y);
         matches
             .get_one::<u32>("min_y_spec")
             .map(|&y| config.y_spec.start = y);
@@ -98,9 +96,6 @@ impl From<&ArgMatches> for PlotConfig {
             .get_one::<u32>("label_size_y")
             .map(|&y| config.label_size.1 = y);
         matches
-            .get_one::<u32>("caption_font_size")
-            .map(|&s| config.caption_font_size = s);
-        matches
             .get_one::<u32>("point_radius")
             .map(|&r| config.point_radius = r);
         matches
@@ -114,31 +109,46 @@ impl From<&ArgMatches> for PlotConfig {
     }
 }
 
-/// Plot [`GlucoseReadingsMap`] to a [`Vec<String>`] of svgs.
+/// Relevant data for svg.
+#[derive(PartialEq, Eq, PartialOrd)]
+pub(crate) struct SvgData {
+    pub(crate) date: Date,
+    pub(crate) content: String,
+}
+impl SvgData {
+    fn new(date: &Date, content: String) -> Self {
+        Self {
+            date: *date,
+            content,
+        }
+    }
+}
+impl Ord for SvgData {
+    fn cmp(&self, other: &Self) -> Ordering {
+        self.date.cmp(&other.date)
+    }
+}
+
+/// Plot [`GlucoseReadingsMap`] to a sorted [`Vec<SvgData>`].
 pub(crate) fn plot_to_strings(
     readings_map: &GlucoseReadingsMap,
     config: &PlotConfig,
-) -> Result<Vec<String>, Box<dyn Error>> {
+) -> Result<Vec<SvgData>, Box<dyn Error>> {
     let mut svgs = Vec::new();
     for (date, readings) in &readings_map.0 {
         let mut svg = String::new();
 
         {
-            let backend = SVGBackend::with_string(&mut svg, config.size);
+            let backend = SVGBackend::with_string(&mut svg, SVG_SIZE);
             let root = backend.into_drawing_area();
 
-            let caption = date.to_string();
             let mut chart = ChartBuilder::on(&root)
-                .caption(
-                    caption,
-                    ("sans-serif", config.caption_font_size).into_font(),
-                )
                 .x_label_area_size(config.label_size.0)
                 .y_label_area_size(config.label_size.1)
-                .margin(CHART_MARGIN)
                 .build_cartesian_2d(X_SPEC, config.y_spec.clone())?;
             chart
                 .configure_mesh()
+                .label_style(PLOTTING_FONT)
                 // FIXME: We should use fixed positions/deltas for labels. I however haven't found a way to do that.
                 .x_labels(config.num_labels.0)
                 .x_label_formatter(&|x| {
@@ -150,6 +160,7 @@ pub(crate) fn plot_to_strings(
                 })
                 .y_labels(config.num_labels.1)
                 .y_desc(Y_DESC)
+                .axis_desc_style(PLOTTING_FONT)
                 .draw()?;
 
             let glucose_threshold = config.glucose_threshold.clone();
@@ -176,8 +187,10 @@ pub(crate) fn plot_to_strings(
             root.present()?
         }
 
-        svgs.push(svg);
+        svgs.push(SvgData::new(date, svg));
     }
 
+    assert!(svgs.len() > 0);
+    svgs.sort();
     Ok(svgs)
 }

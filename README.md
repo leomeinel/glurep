@@ -33,14 +33,15 @@ Options:
   -n, --name [<patient_name>]            Patient name [default: Patient]
       --width [<width>]                  Width of the output pdf in `mm`
       --height [<height>]                Height of the output pdf in `mm`
+  -m, --margin [<margin>]                Margin of the output pdf in `mm`
+      --hfs [<header_font_size>]         Header font size in `pt`
       --min-y [<max_y>]                  Minimum y value in `mg/dL`
       --max-y [<max_y>]                  Maximum y value in `mg/dL`
       --num-x [<num_labels_x>]           Maximum number of x labels
       --num-y [<num_labels_y>]           Maximum number of y labels
-      --size-x [<label_size_x>]          Size of x labels in pixels
-      --size-y [<label_size_y>]          Size of y labels in pixels
-      --cfs [<font_size>]                Caption font size
-  -r, --radius [<radius>]                Radius of a single point in pixels
+      --size-x [<label_size_x>]          X label size approximately in `mm`
+      --size-y [<label_size_y>]          Y label size approximately in `mm`
+  -r, --radius [<radius>]                Radius of a single point approximately in `mm`
       --low [<low_glucose_threshold>]    Low glucose threshold
       --high [<high_glucose_threshold>]  High glucose threshold
   -h, --help                             Print help
