@@ -113,13 +113,13 @@ impl From<&ArgMatches> for PlotConfig {
 #[derive(PartialEq, Eq, PartialOrd)]
 pub(crate) struct SvgData {
     pub(crate) date: Date,
-    pub(crate) content: String,
+    pub(crate) contents: String,
 }
 impl SvgData {
-    fn new(date: &Date, content: String) -> Self {
+    fn new(date: &Date, contents: String) -> Self {
         Self {
             date: *date,
-            content,
+            contents,
         }
     }
 }

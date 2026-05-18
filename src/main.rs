@@ -12,7 +12,9 @@ mod utils;
 
 fn main() -> Result<(), Box<dyn Error>> {
     let args = arg_matches();
+    let is_svg = args.get_one::<bool>("svg").unwrap();
     let input_path = args.get_one::<PathBuf>("INPUT_FILE").unwrap();
+    assert!(input_path.is_file());
     let output_path = args.get_one::<PathBuf>("OUTPUT_FILE").unwrap();
     let patient_name = args.get_one::<String>("patient_name").unwrap();
     let plot_config = PlotConfig::from(&args);
@@ -21,8 +23,18 @@ fn main() -> Result<(), Box<dyn Error>> {
     let readings_map = readings_map(input_path)?;
     let svgs = plot_to_strings(&readings_map, &plot_config)?;
 
-    let pdf_bytes = svgs_to_pdf_bytes(svgs, page_config, patient_name.as_str())?;
-    fs::write(output_path, pdf_bytes)?;
+    if *is_svg {
+        assert!(output_path.is_dir());
+        for svg in svgs {
+            let file_name = format!("{}.svg", svg.date);
+            let output_path = output_path.join(file_name);
+            fs::write(output_path, svg.contents)?;
+        }
+    } else {
+        assert!(output_path.is_file());
+        let pdf_bytes = svgs_to_pdf_bytes(svgs, page_config, patient_name.as_str())?;
+        fs::write(output_path, pdf_bytes)?;
+    }
 
     Ok(())
 }
@@ -30,6 +42,11 @@ fn main() -> Result<(), Box<dyn Error>> {
 /// All [`ArgMatches`] from arguments that were supplied to the program at runtime by the user.
 fn arg_matches() -> ArgMatches {
     command!()
+        .arg(
+            arg!(-s --svg "Output svgs instead of pdf")
+                .value_parser(value_parser!(bool))
+                .id("svg"),
+        )
         .arg(
             arg!(-n --name [patient_name] "Patient name")
                 .default_value("Patient")
@@ -108,7 +125,7 @@ fn arg_matches() -> ArgMatches {
         )
         .arg(
             arg!(
-                <OUTPUT_FILE> "Output file (pdf)"
+                <OUTPUT_FILE> "Output file (pdf) [default] or directory if using `--svg`"
             )
             .value_parser(value_parser!(PathBuf)),
         )

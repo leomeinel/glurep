@@ -76,7 +76,7 @@ pub(crate) fn svgs_to_pdf_bytes(
 
     let mut pages = Vec::new();
     for svg_data in svgs {
-        let svg = Svg::parse(svg_data.content.as_str(), &mut Vec::new())?;
+        let svg = Svg::parse(svg_data.contents.as_str(), &mut Vec::new())?;
         let id = doc.add_xobject(&svg);
         let mut ops = Vec::new();
         ops.extend_from_slice(&header(&config, &svg_data.date, patient_name));
