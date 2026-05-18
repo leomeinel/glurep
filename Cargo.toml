@@ -1,7 +1,14 @@
 [package]
-name = "gluco-plot"
+name = "glurep"
 version = "0.1.0"
 edition = "2024"
+license = "Apache-2.0 OR MIT"
+categories = ["command-line-utilities", "science::bioinformatics", "visualization"]
+description = "Generate pdf reports from glucose readings in supported csv formats."
+authors = ["Leopold Meinel"]
+repository = "https://github.com/leomeinel/glurep"
+readme = "README.md"
+exclude = ["assets/*", "static/*"]
 
 [dependencies]
 clap = { version = "4.6.1", features = ["cargo"] }
@@ -11,3 +18,45 @@ jiff = {version = "0.2.24", default-features = false, features = ["std", "alloc"
 plotters = { version = "0.3.7" , default-features = false, features = ["svg_backend", "full_palette", "all_series"]}
 printpdf = {version = "0.9.1", default-features = false, features = ["svg"]}
 serde = { version ="1.0.228", features = ["derive"] }
+
+# Enable a small amount of optimization in the dev profile.
+[profile.dev]
+opt-level = 1
+
+# Enable a large amount of optimization in the dev profile for dependencies.
+[profile.dev.package."*"]
+opt-level = 3
+
+[profile.web-dev]
+inherits = "dev"
+
+[profile.web-dev.package."*"]
+# Optimize with size in mind (also try "z", sometimes it is better).
+# Slightly slows compile times, great improvements to file size and runtime performance.
+opt-level = "s"
+
+[profile.release]
+# Compile the entire crate as one unit.
+# Slows compile times, marginal improvements.
+codegen-units = 1
+# Do a second optimization pass over the entire program, including dependencies.
+# Slows compile times, marginal improvements.
+lto = "thin"
+strip = "symbols"
+
+[profile.web-release]
+# Default to release profile values.
+inherits = "release"
+# Optimize with size in mind (also try "z", sometimes it is better).
+# Slightly slows compile times, great improvements to file size and runtime performance.
+opt-level = "s"
+
+# Optimize for build time in CI.
+[profile.ci]
+inherits = "dev"
+opt-level = 0
+debug = "line-tables-only"
+codegen-units = 4
+
+[profile.ci.package."*"]
+opt-level = 0
