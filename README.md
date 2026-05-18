@@ -1,6 +1,9 @@
 # Glurep
 
 [![License](https://img.shields.io/badge/license-MIT%2FApache-blue.svg)](https://github.com/leomeinel/glurep)
+[![Crates.io](https://img.shields.io/crates/v/glurep.svg)](https://crates.io/crates/glurep)
+[![Downloads](https://img.shields.io/crates/d/glurep.svg)](https://crates.io/crates/glurep)
+[![Docs](https://docs.rs/glurep/badge.svg)](https://docs.rs/glurep/latest/glurep/)
 
 Generate pdf reports from glucose readings in supported csv formats.
 
