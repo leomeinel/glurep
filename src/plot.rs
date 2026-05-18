@@ -192,5 +192,6 @@ pub(crate) fn plot_to_strings(
 
     assert!(svgs.len() > 0);
     svgs.sort();
+
     Ok(svgs)
 }
