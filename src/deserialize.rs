@@ -18,7 +18,7 @@ use csv::ReaderBuilder;
 use jiff::civil::{Date, Time};
 use serde::Deserialize;
 
-/// Map of [`NaiveDate`] to [`GlucoseReading`]s of that day.
+/// Map of [`Date`] to [`GlucoseReading`]s of that day.
 #[derive(Default, Debug)]
 pub(crate) struct GlucoseReadingsMap(pub(crate) HashMap<Date, HashSet<GlucoseReading>>);
 impl GlucoseReadingsMap {
