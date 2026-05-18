@@ -17,11 +17,11 @@ fn main() -> Result<(), Box<dyn Error>> {
     let patient_name = args.get_one::<String>("patient_name").unwrap();
     let plot_config = PlotConfig::from(&args);
 
-    let readings = GlucoseReadingsMap::from_file_path(input_path)?;
-    let svgs = plot_to_strings(&readings, &plot_config)?;
+    let readings_map = readings_map(input_path)?;
+    let svgs = plot_to_strings(&readings_map, &plot_config)?;
 
     let page_config = PageConfig::from(plot_config);
-    let doc_name = doc_name(&readings, patient_name.as_str());
+    let doc_name = doc_name(&readings_map, patient_name.as_str());
     let pdf_bytes = svgs_to_pdf_bytes(svgs, page_config, doc_name.as_str())?;
     fs::write(output_path, pdf_bytes)?;
 

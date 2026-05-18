@@ -5,7 +5,7 @@
  */
 
 pub(crate) mod prelude {
-    pub(crate) use super::GlucoseReadingsMap;
+    pub(crate) use super::{GlucoseReadingsMap, readings_map};
 }
 
 use std::{
@@ -21,31 +21,6 @@ use serde::Deserialize;
 /// Map of [`Date`] to [`GlucoseReading`]s of that day.
 #[derive(Default, Debug)]
 pub(crate) struct GlucoseReadingsMap(pub(crate) HashMap<Date, HashSet<GlucoseReading>>);
-impl GlucoseReadingsMap {
-    /// Deserialize file at `file_path` with `time` used to determine timezone and construct [`GlucoseReadingsMap`].
-    pub(crate) fn from_file_path(
-        input_path: &PathBuf,
-    ) -> Result<GlucoseReadingsMap, Box<dyn Error>> {
-        let mut readings: GlucoseReadingsMap = GlucoseReadingsMap::default();
-
-        let mut reader = ReaderBuilder::new().delimiter(b';').from_path(input_path)?;
-        for result in reader.deserialize() {
-            let record: SiDiaryRecord = result?;
-            let date = Date::strptime("%d.%m.%Y", record.day)?;
-            let time = Time::strptime("%H:%M", record.time)?;
-
-            if let Some(measurement) = record.udt_cgms {
-                readings
-                    .0
-                    .entry(date)
-                    .or_default()
-                    .insert(GlucoseReading::new(time, measurement));
-            }
-        }
-
-        Ok(readings)
-    }
-}
 
 /// A glucose reading.
 #[derive(Default, Debug, Hash, PartialEq, Eq, PartialOrd, Ord)]
@@ -70,4 +45,26 @@ struct SiDiaryRecord {
     day: String,
     time: String,
     udt_cgms: Option<u32>,
+}
+
+/// Deserialize csv at `input_path` and construct [`GlucoseReadingsMap`].
+pub(crate) fn readings_map(input_path: &PathBuf) -> Result<GlucoseReadingsMap, Box<dyn Error>> {
+    let mut readings_map: GlucoseReadingsMap = GlucoseReadingsMap::default();
+
+    let mut reader = ReaderBuilder::new().delimiter(b';').from_path(input_path)?;
+    for result in reader.deserialize() {
+        let record: SiDiaryRecord = result?;
+        let date = Date::strptime("%d.%m.%Y", record.day)?;
+        let time = Time::strptime("%H:%M", record.time)?;
+
+        if let Some(measurement) = record.udt_cgms {
+            readings_map
+                .0
+                .entry(date)
+                .or_default()
+                .insert(GlucoseReading::new(time, measurement));
+        }
+    }
+
+    Ok(readings_map)
 }
