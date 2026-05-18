@@ -101,7 +101,7 @@ pub(crate) fn svgs_to_pdf_bytes(
 fn header(config: &PageConfig, date: &Date, patient_name: &str) -> [Op; 9] {
     let page_height = config.size.1;
     let margin = config.margin;
-    // FIXME: Visually pos_y is not exactly the same as other margins.
+    // FIXME: Visually the margin resulting from pos_y is not exactly the same as other margins if `margin` is less than `header_font_size / 2.`.
     // NOTE: The cursor seems to draw from the center, therefore we need to subtract half of the font size.
     let pos_y = page_height - margin - Mm::from(config.header_font_size / 2.);
     let text = format!("{}: {}", patient_name, date);
