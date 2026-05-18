@@ -1,17 +1,14 @@
 pub(crate) mod prelude {
-    pub(crate) use super::{PlotConfig, plot_to_svg};
+    pub(crate) use super::{PlotConfig, plot_to_strings};
 }
 
-use std::{collections::HashSet, error::Error, ops::Range, path::PathBuf};
+use std::{collections::HashSet, error::Error, ops::Range};
 
 use clap::ArgMatches;
 use jiff::{Span, civil::Time};
 use plotters::{prelude::*, style::full_palette::*};
 
-use crate::{deserialize::prelude::*, utils::prelude::*};
-
-/// Error if an invalid time is processed from the csv.
-const ERR_INVALID_TIME: &str = "Invalid time. Aborting.";
+use crate::{deserialize::prelude::*, log::prelude::*, utils::prelude::*};
 
 /// Chart margin in pixels.
 const CHART_MARGIN: u32 = 10;
@@ -117,64 +114,70 @@ impl From<&ArgMatches> for PlotConfig {
     }
 }
 
-/// Plot [`GlucoseReadingsMap`] to svg.
-pub(crate) fn plot_to_svg(
-    readings: GlucoseReadingsMap,
-    output_path: &PathBuf,
-    config: PlotConfig,
-) -> Result<(), Box<dyn Error>> {
-    for (date, readings) in readings.0 {
-        let output_path = output_path.join(format!("{}.svg", date));
-        let root = SVGBackend::new(&output_path, config.size).into_drawing_area();
+/// Plot [`GlucoseReadingsMap`] to a [`Vec<String>`] of svgs.
+pub(crate) fn plot_to_strings(
+    readings_map: &GlucoseReadingsMap,
+    config: &PlotConfig,
+) -> Result<Vec<String>, Box<dyn Error>> {
+    let mut svgs = Vec::new();
+    for (date, readings) in &readings_map.0 {
+        let mut svg = String::new();
 
-        let caption = date.to_string();
-        let mut chart = ChartBuilder::on(&root)
-            .caption(
-                caption,
-                ("sans-serif", config.caption_font_size).into_font(),
-            )
-            .x_label_area_size(config.label_size.0)
-            .y_label_area_size(config.label_size.1)
-            .margin(CHART_MARGIN)
-            .build_cartesian_2d(X_SPEC, config.y_spec.clone())?;
-        chart
-            .configure_mesh()
-            // FIXME: We should use fixed positions/deltas for labels. I however haven't found a way to do that.
-            .x_labels(config.num_labels.0)
-            .x_label_formatter(&|x| {
-                Time::midnight()
-                    .checked_add(Span::new().seconds(*x))
-                    .expect(ERR_INVALID_TIME)
-                    .strftime("%H:%M")
-                    .to_string()
-            })
-            .y_labels(config.num_labels.1)
-            .y_desc(Y_DESC)
-            .draw()?;
+        {
+            let backend = SVGBackend::with_string(&mut svg, config.size);
+            let root = backend.into_drawing_area();
 
-        let glucose_threshold = config.glucose_threshold.clone();
-        let x_points = &[X_SPEC.start, X_SPEC.end];
-        chart.draw_series(LineSeries::new(
-            x_points.map(|x| (x, glucose_threshold.end)),
-            config.measurement_color(glucose_threshold.end),
-        ))?;
-        chart.draw_series(LineSeries::new(
-            x_points.map(|x| (x, glucose_threshold.start)),
-            config.measurement_color(glucose_threshold.start),
-        ))?;
+            let caption = date.to_string();
+            let mut chart = ChartBuilder::on(&root)
+                .caption(
+                    caption,
+                    ("sans-serif", config.caption_font_size).into_font(),
+                )
+                .x_label_area_size(config.label_size.0)
+                .y_label_area_size(config.label_size.1)
+                .margin(CHART_MARGIN)
+                .build_cartesian_2d(X_SPEC, config.y_spec.clone())?;
+            chart
+                .configure_mesh()
+                // FIXME: We should use fixed positions/deltas for labels. I however haven't found a way to do that.
+                .x_labels(config.num_labels.0)
+                .x_label_formatter(&|x| {
+                    Time::midnight()
+                        .checked_add(Span::new().seconds(*x))
+                        .expect(ERR_INVALID_TIME)
+                        .strftime("%H:%M")
+                        .to_string()
+                })
+                .y_labels(config.num_labels.1)
+                .y_desc(Y_DESC)
+                .draw()?;
 
-        let readings: HashSet<_> = readings
-            .iter()
-            .map(|r| (num_seconds_from_midnight(&r.time), r.measurement))
-            .collect();
-        chart.draw_series(readings.iter().map(|(x, y)| {
-            let color = config.measurement_color(*y);
-            return EmptyElement::at((*x, *y))
-                + Circle::new((0, 0), config.point_radius, color.filled());
-        }))?;
+            let glucose_threshold = config.glucose_threshold.clone();
+            let x_points = &[X_SPEC.start, X_SPEC.end];
+            chart.draw_series(LineSeries::new(
+                x_points.map(|x| (x, glucose_threshold.end)),
+                config.measurement_color(glucose_threshold.end),
+            ))?;
+            chart.draw_series(LineSeries::new(
+                x_points.map(|x| (x, glucose_threshold.start)),
+                config.measurement_color(glucose_threshold.start),
+            ))?;
 
-        root.present()?;
+            let readings: HashSet<_> = readings
+                .iter()
+                .map(|r| (num_seconds_from_midnight(&r.time), r.measurement))
+                .collect();
+            chart.draw_series(readings.iter().map(|(x, y)| {
+                let color = config.measurement_color(*y);
+                return EmptyElement::at((*x, *y))
+                    + Circle::new((0, 0), config.point_radius, color.filled());
+            }))?;
+
+            root.present()?
+        }
+
+        svgs.push(svg);
     }
 
-    Ok(())
+    Ok(svgs)
 }

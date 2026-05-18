@@ -1,34 +1,48 @@
-use std::{env, error::Error, path::PathBuf};
+use std::{env, error::Error, fs, path::PathBuf};
 
 use clap::{ArgMatches, arg, command, value_parser};
 
-use crate::{deserialize::prelude::*, plot::prelude::*};
+use crate::{deserialize::prelude::*, pdf::prelude::*, plot::prelude::*};
 
 mod deserialize;
+mod log;
+mod pdf;
 mod plot;
 mod utils;
 
 fn main() -> Result<(), Box<dyn Error>> {
     let args = arg_matches();
-
     let input_path = args.get_one::<PathBuf>("INPUT_FILE").unwrap();
-    let readings = GlucoseReadingsMap::from_file_path(input_path)?;
-
-    let output_path = args.get_one::<PathBuf>("OUTPUT_DIR").unwrap();
+    let output_path = args.get_one::<PathBuf>("OUTPUT_FILE").unwrap();
+    let patient_name = args.get_one::<String>("patient_name").unwrap();
     let plot_config = PlotConfig::from(&args);
-    plot_to_svg(readings, output_path, plot_config)
+
+    let readings = GlucoseReadingsMap::from_file_path(input_path)?;
+    let svgs = plot_to_strings(&readings, &plot_config)?;
+
+    let page_config = PageConfig::from(plot_config);
+    let doc_name = doc_name(&readings, patient_name.as_str());
+    let pdf_bytes = svgs_to_pdf_bytes(svgs, page_config, doc_name.as_str())?;
+    fs::write(output_path, pdf_bytes)?;
+
+    Ok(())
 }
 
 /// All [`ArgMatches`] from arguments that were supplied to the program at runtime by the user.
 fn arg_matches() -> ArgMatches {
     command!()
         .arg(
-            arg!(--width [width] "Width of the output svgs in pixels")
+            arg!(-n --name [patient_name] "Patient name")
+                .default_value("Patient")
+                .id("patient_name"),
+        )
+        .arg(
+            arg!(--width [width] "Width of the output pdf in `mm`")
                 .value_parser(value_parser!(u32))
                 .id("size_x"),
         )
         .arg(
-            arg!(--height [height] "Height of the output svgs in pixels")
+            arg!(--height [height] "Height of the output pdf in `mm`")
                 .value_parser(value_parser!(u32))
                 .id("size_y"),
         )
@@ -90,7 +104,7 @@ fn arg_matches() -> ArgMatches {
         )
         .arg(
             arg!(
-                <OUTPUT_DIR> "Output directory"
+                <OUTPUT_FILE> "Output file (pdf)"
             )
             .value_parser(value_parser!(PathBuf)),
         )

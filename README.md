@@ -2,7 +2,7 @@
 
 [![License](https://img.shields.io/badge/license-MIT%2FApache-blue.svg)](https://github.com/leomeinel/gluco-plot)
 
-Plot glucose readings to svg and optionally create a pdf with [`scripts/pdf.sh`](https://github.com/leomeinel/gluco-plot/tree/main/scripts/pdf.sh).
+Plot glucose readings in supported csv formats to pdf.
 
 ## Supported csv formats
 

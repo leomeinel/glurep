@@ -4,8 +4,10 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-jiff = {version = "0.2.24", default-features = false, features = ["std", "alloc", "perf-inline"]}
 clap = { version = "4.6.1", features = ["cargo"] }
 csv = "1.4.0"
+itertools = "0.14.0"
+jiff = {version = "0.2.24", default-features = false, features = ["std", "alloc", "perf-inline"]}
 plotters = { version = "0.3.7" , default-features = false, features = ["svg_backend", "full_palette", "all_series"]}
+printpdf = {version = "0.9.1", default-features = false, features = ["svg"]}
 serde = { version ="1.0.228", features = ["derive"] }
