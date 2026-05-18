@@ -383,3 +383,4 @@ gradle-app.setting
 !Cargo.lock
 /out/*
 /out/pdf/*
+/.zed/*
