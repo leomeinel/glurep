@@ -5,7 +5,7 @@ pub(crate) const PLOT_ERR_INVALID_TIME: &str = "Invalid time encountered while p
 
 /// [`Errors`](thiserror::Error) for invalid usage for specified flags.
 #[derive(thiserror::Error, Debug)]
-pub(crate) enum FlagError {
+pub enum FlagError {
     #[error("File `{0}` already exists. Use `--force` to overwrite.")]
     IoErrorAlreadyExists(PathBuf),
     #[error("`{0}` is not a directory. For `--svg` you need to specify a directory.")]
@@ -16,21 +16,21 @@ pub(crate) enum FlagError {
 
 /// [`Errors`](thiserror::Error) encountered in [`crate::deserialize`].
 #[derive(thiserror::Error, Debug)]
-pub(crate) enum DeserializeError {
+pub enum DeserializeError {
     #[error("Failed to read any valid entries from csv.")]
     EmptyGlucoseReadingsMap,
 }
 
 /// [`Errors`](thiserror::Error) encountered in [`crate::plot`].
 #[derive(thiserror::Error, Debug)]
-pub(crate) enum PlotError {
+pub enum PlotError {
     #[error("Failed to construct svgs.")]
     EmptySvgs,
 }
 
 /// [`Errors`](thiserror::Error) encountered in [`crate::pdf`].
 #[derive(thiserror::Error, Debug)]
-pub(crate) enum PdfError {
+pub enum PdfError {
     #[error("Failed to serialize pdf document to bytes.")]
     EmptyBytes,
     #[error("Failed to construct pages for pdf document.")]

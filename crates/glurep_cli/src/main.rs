@@ -7,14 +7,7 @@ use std::{env, fs, path::PathBuf};
 
 use anyhow::Context;
 use clap::{ArgMatches, arg, command, value_parser};
-
-use crate::{deserialize::prelude::*, log::prelude::*, pdf::prelude::*, plot::prelude::*};
-
-mod deserialize;
-mod log;
-mod pdf;
-mod plot;
-mod utils;
+use glurep_core::prelude::*;
 
 fn main() -> Result<(), anyhow::Error> {
     let args = arg_matches();

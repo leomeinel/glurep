@@ -1,8 +1,5 @@
-pub(crate) mod prelude {
-    pub(crate) use super::{PageConfig, svgs_to_pdf_bytes};
-}
-
 use anyhow::anyhow;
+#[cfg(feature = "cli")]
 use clap::ArgMatches;
 use itertools::Itertools as _;
 use jiff::civil::Date;
@@ -20,14 +17,15 @@ const PX_INTO_PT_DPI: f32 = 25.4;
 
 /// Config for plotting an svg to a page.
 #[derive(Clone, Debug)]
-pub(crate) struct PageConfig {
+pub struct PageConfig {
     /// Page size `(x, y)`.
-    pub(crate) size: (Mm, Mm),
+    pub size: (Mm, Mm),
     /// Page margin.
-    pub(crate) margin: Mm,
+    pub margin: Mm,
     /// Header font size.
-    pub(crate) header_font_size: Pt,
+    pub header_font_size: Pt,
 }
+#[cfg(feature = "cli")]
 impl From<&ArgMatches> for PageConfig {
     fn from(matches: &ArgMatches) -> Self {
         let mut config = PageConfig::default();
@@ -59,7 +57,7 @@ impl Default for PageConfig {
 }
 
 /// [`PdfDocument`] from `svgs` as bytes.
-pub(crate) fn svgs_to_pdf_bytes(
+pub fn svgs_to_pdf_bytes(
     svgs: Vec<SvgData>,
     config: PageConfig,
     patient_name: &str,

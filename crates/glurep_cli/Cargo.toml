@@ -1,0 +1,21 @@
+[package]
+name = "glurep_cli"
+version = "0.4.0"
+edition = "2024"
+license = "Apache-2.0 OR MIT"
+categories = ["command-line-utilities", "science::bioinformatics", "visualization"]
+description = "CLI utility for generating pdf reports from glucose readings in supported csv formats."
+authors = ["Leopold Meinel"]
+repository = "https://github.com/leomeinel/glurep"
+readme = "README.md"
+exclude = ["assets/*", "static/*"]
+
+[[bin]]
+name = "glurep-cli"
+path = "src/main.rs"
+
+[dependencies]
+glurep_core = { workspace = true, features = ["cli"] }
+
+anyhow = { workspace = true }
+clap = { workspace = true }

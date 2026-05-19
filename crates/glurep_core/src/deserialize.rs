@@ -5,7 +5,7 @@
  */
 
 pub(crate) mod prelude {
-    pub(crate) use super::{GlucoseReadingsMap, readings_map};
+    pub(crate) use super::GlucoseReadingsMap;
 }
 
 use std::{
@@ -21,18 +21,18 @@ use crate::log::prelude::*;
 
 /// Map of [`Date`] to [`GlucoseReading`]s of that day.
 #[derive(Default, Debug)]
-pub(crate) struct GlucoseReadingsMap(pub(crate) HashMap<Date, HashSet<GlucoseReading>>);
+pub struct GlucoseReadingsMap(pub(crate) HashMap<Date, HashSet<GlucoseReading>>);
 
 /// A glucose reading.
 #[derive(Default, Debug, Hash, PartialEq, Eq, PartialOrd, Ord)]
-pub(crate) struct GlucoseReading {
+pub struct GlucoseReading {
     /// Time of day the reading was taken.
-    pub(crate) time: Time,
+    pub time: Time,
     /// Glucose measurement in `mg/dL`.
-    pub(crate) measurement: u32,
+    pub measurement: u32,
 }
 impl GlucoseReading {
-    pub(crate) fn new(time: Time, measurement: u32) -> Self {
+    pub fn new(time: Time, measurement: u32) -> Self {
         Self { time, measurement }
     }
 }
@@ -49,7 +49,7 @@ struct SiDiaryRecord {
 }
 
 /// Deserialize csv at `input_path` and construct [`GlucoseReadingsMap`].
-pub(crate) fn readings_map(input_path: &PathBuf) -> Result<GlucoseReadingsMap, anyhow::Error> {
+pub fn readings_map(input_path: &PathBuf) -> Result<GlucoseReadingsMap, anyhow::Error> {
     let mut readings_map: GlucoseReadingsMap = GlucoseReadingsMap::default();
 
     let mut reader = ReaderBuilder::new().delimiter(b';').from_path(input_path)?;

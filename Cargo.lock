@@ -827,6 +827,22 @@ name = "glurep"
 version = "0.4.0"
 dependencies = [
  "anyhow",
+]
+
+[[package]]
+name = "glurep_cli"
+version = "0.4.0"
+dependencies = [
+ "anyhow",
+ "clap",
+ "glurep_core",
+]
+
+[[package]]
+name = "glurep_core"
+version = "0.4.0"
+dependencies = [
+ "anyhow",
  "clap",
  "csv",
  "itertools 0.14.0",

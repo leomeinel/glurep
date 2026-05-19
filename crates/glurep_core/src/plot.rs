@@ -1,9 +1,10 @@
 pub(crate) mod prelude {
-    pub(crate) use super::{PlotConfig, SVG_SIZE, SvgData, plot_to_strings};
+    pub(crate) use super::{SVG_SIZE, SvgData};
 }
 
 use std::{cmp::Ordering, collections::HashSet, ops::Range};
 
+#[cfg(feature = "cli")]
 use clap::ArgMatches;
 use jiff::{
     Span,
@@ -30,20 +31,20 @@ const Y_DESC: &str = "mg/dL";
 
 /// Config for plotting [`GlucoseReadingsMap`] to svg.
 #[derive(Clone, Debug)]
-pub(crate) struct PlotConfig {
+pub struct PlotConfig {
     /// `y` axis spec in `mg/dL`.
-    pub(crate) y_spec: Range<u32>,
+    pub y_spec: Range<u32>,
     /// Number of labels for axes `(x, y)`.
-    pub(crate) num_labels: (usize, usize),
+    pub num_labels: (usize, usize),
     /// Label size for axes `(x, y)` in pixels.
     ///
     /// This can be approximated to `mm` of the output pdf.
-    pub(crate) label_size: (u32, u32),
+    pub label_size: (u32, u32),
 
     /// Radius of a single plotted point in pixels.
     ///
     /// This can be approximated to `mm` of the output pdf.
-    pub(crate) point_radius: u32,
+    pub point_radius: u32,
 
     /// Glucose target range.
     ///
@@ -52,7 +53,7 @@ pub(crate) struct PlotConfig {
     /// - anything in range is displayed in [`CYAN_300`].
     /// - anything below the range is displayed in [`RED_300`].
     /// - anything above the range is displayed in [`ORANGE_300`].
-    pub(crate) glucose_threshold: Range<u32>,
+    pub glucose_threshold: Range<u32>,
 }
 impl PlotConfig {
     fn measurement_color(&self, measurement: u32) -> RGBColor {
@@ -77,6 +78,7 @@ impl Default for PlotConfig {
         }
     }
 }
+#[cfg(feature = "cli")]
 impl From<&ArgMatches> for PlotConfig {
     fn from(matches: &ArgMatches) -> Self {
         let mut config = PlotConfig::default();
@@ -114,9 +116,9 @@ impl From<&ArgMatches> for PlotConfig {
 
 /// Relevant data for svg.
 #[derive(PartialEq, Eq, PartialOrd)]
-pub(crate) struct SvgData {
-    pub(crate) date: Date,
-    pub(crate) contents: String,
+pub struct SvgData {
+    pub date: Date,
+    pub contents: String,
 }
 impl SvgData {
     fn new(date: &Date, contents: String) -> Self {
@@ -133,7 +135,7 @@ impl Ord for SvgData {
 }
 
 /// Plot [`GlucoseReadingsMap`] to a sorted [`Vec<SvgData>`].
-pub(crate) fn plot_to_strings(
+pub fn plot_to_strings(
     readings_map: &GlucoseReadingsMap,
     config: &PlotConfig,
 ) -> Result<Vec<SvgData>, anyhow::Error> {

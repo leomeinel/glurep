@@ -1,0 +1,26 @@
+[package]
+name = "glurep_core"
+version = "0.4.0"
+edition = "2024"
+license = "Apache-2.0 OR MIT"
+categories = ["science::bioinformatics", "visualization"]
+description = "Core library for generating pdf reports from glucose readings in supported csv formats."
+authors = ["Leopold Meinel"]
+repository = "https://github.com/leomeinel/glurep"
+readme = "README.md"
+exclude = ["assets/*", "static/*"]
+
+[dependencies]
+anyhow = { workspace = true }
+clap = { workspace = true, optional = true }
+csv = { workspace = true }
+itertools = { workspace = true }
+jiff = { workspace = true }
+plotters = { workspace = true }
+printpdf = { workspace = true }
+serde = { workspace = true }
+thiserror = { workspace = true }
+
+[features]
+default = []
+cli = ["dep:clap"]
