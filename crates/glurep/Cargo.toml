@@ -10,4 +10,17 @@ repository.workspace = true
 readme = "README.md"
 
 [dependencies]
+glurep_core = { workspace = true }
+
 anyhow = { workspace = true }
+rfd = { workspace = true, optional = true }
+winit = { workspace = true }
+xilem = { workspace = true, optional = true }
+xilem_web = { workspace = true, optional = true }
+
+[features]
+# FIXME: Just use target os, not features!
+default = ["desktop"]
+desktop = ["dep:rfd", "dep:xilem"]
+web = ["dep:rfd", "dep:xilem_web"]
+mobile = ["dep:xilem"]
