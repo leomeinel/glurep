@@ -53,16 +53,17 @@ pub(crate) fn readings_map(input_path: &PathBuf) -> Result<GlucoseReadingsMap, a
     let mut reader = ReaderBuilder::new().delimiter(b';').from_path(input_path)?;
     for result in reader.deserialize() {
         let record: SiDiaryRecord = result?;
+        let Some(measurement) = record.udt_cgms else {
+            continue;
+        };
         let date = Date::strptime("%d.%m.%Y", record.day)?;
         let time = Time::strptime("%H:%M", record.time)?;
 
-        if let Some(measurement) = record.udt_cgms {
-            readings_map
-                .0
-                .entry(date)
-                .or_default()
-                .insert(GlucoseReading::new(time, measurement));
-        }
+        readings_map
+            .0
+            .entry(date)
+            .or_default()
+            .insert(GlucoseReading::new(time, measurement));
     }
 
     assert!(readings_map.0.len() > 0);
