@@ -1,5 +1,5 @@
 [workspace]
-resolver = "2"
+resolver = "3"
 members = [
     "crates/glurep",
     "crates/glurep_cli",
@@ -10,12 +10,8 @@ members = [
 version = "0.4.0"
 edition = "2024"
 license = "Apache-2.0 OR MIT"
-categories = ["science::bioinformatics", "visualization"]
-description = "Generate pdf reports from glucose readings in supported csv formats."
 authors = ["Leopold Meinel"]
 repository = "https://github.com/leomeinel/glurep"
-readme = "README.md"
-exclude = ["assets/*", "static/*"]
 
 [workspace.dependencies]
 glurep = { version = "0.4.0", path = "crates/glurep" }

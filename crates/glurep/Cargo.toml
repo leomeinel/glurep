@@ -1,14 +1,13 @@
 [package]
 name = "glurep"
-version = "0.4.0"
-edition = "2024"
-license = "Apache-2.0 OR MIT"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
 categories = ["gui", "science::bioinformatics", "visualization"]
 description = "GUI utility for generating pdf reports from glucose readings in supported csv formats."
-authors = ["Leopold Meinel"]
-repository = "https://github.com/leomeinel/glurep"
+authors.workspace = true
+repository.workspace = true
 readme = "README.md"
-exclude = ["assets/*", "static/*"]
 
 [dependencies]
 anyhow = { workspace = true }
