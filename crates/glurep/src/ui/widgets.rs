@@ -16,7 +16,7 @@ pub(super) fn page_config_panel(state: &mut AppState) -> impl WidgetView<AppStat
     flex_col((
         label("Size"),
         flex_row((
-            label(format!("Min: {}", state.page_config.size.0.0)),
+            label(format!("X: {}", state.page_config.size.0.0)),
             slider(
                 0_f64,
                 1000_f64,
@@ -24,7 +24,7 @@ pub(super) fn page_config_panel(state: &mut AppState) -> impl WidgetView<AppStat
                 |state: &mut AppState, input| state.page_config.size.0.0 = input as f32,
             )
             .step(1.),
-            label(format!("Max: {}", state.page_config.size.1.0)),
+            label(format!("Y: {}", state.page_config.size.1.0)),
             slider(
                 0_f64,
                 1000_f64,
