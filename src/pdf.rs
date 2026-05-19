@@ -18,7 +18,7 @@ use crate::{log::prelude::*, plot::prelude::*};
 /// This is necessary to have the pixels of an svg match a millimeter if used as [`XObjectTransform::dpi`].
 const PX_INTO_PT_DPI: f32 = 25.4;
 
-/// Config for plotting an svg to a page..
+/// Config for plotting an svg to a page.
 #[derive(Clone, Debug)]
 pub(crate) struct PageConfig {
     /// Page size `(x, y)`.
@@ -58,7 +58,7 @@ impl Default for PageConfig {
     }
 }
 
-/// [`PdfDocument`] from `svgs` with `doc_name` as bytes.
+/// [`PdfDocument`] from `svgs` as bytes.
 pub(crate) fn svgs_to_pdf_bytes(
     svgs: Vec<SvgData>,
     config: PageConfig,
