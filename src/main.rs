@@ -31,7 +31,6 @@ fn main() -> Result<(), Box<dyn Error>> {
             fs::write(output_path, svg.contents)?;
         }
     } else {
-        assert!(output_path.is_file());
         let pdf_bytes = svgs_to_pdf_bytes(svgs, page_config, patient_name.as_str())?;
         fs::write(output_path, pdf_bytes)?;
     }
