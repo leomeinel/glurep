@@ -17,6 +17,8 @@ use csv::ReaderBuilder;
 use jiff::civil::{Date, Time};
 use serde::Deserialize;
 
+use crate::log::prelude::*;
+
 /// Map of [`Date`] to [`GlucoseReading`]s of that day.
 #[derive(Default, Debug)]
 pub(crate) struct GlucoseReadingsMap(pub(crate) HashMap<Date, HashSet<GlucoseReading>>);
@@ -65,8 +67,9 @@ pub(crate) fn readings_map(input_path: &PathBuf) -> Result<GlucoseReadingsMap, a
             .or_default()
             .insert(GlucoseReading::new(time, measurement));
     }
-
-    assert!(readings_map.0.len() > 0);
+    if readings_map.0.is_empty() {
+        return Err(DeserializeError::EmptyGlucoseReadingsMap.into());
+    }
 
     Ok(readings_map)
 }

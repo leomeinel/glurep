@@ -194,8 +194,9 @@ pub(crate) fn plot_to_strings(
 
         svgs.push(SvgData::new(date, svg));
     }
-
-    assert!(svgs.len() > 0);
+    if svgs.is_empty() {
+        return Err(PlotError::EmptySvgs.into());
+    }
     svgs.sort();
 
     Ok(svgs)

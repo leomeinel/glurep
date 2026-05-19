@@ -66,8 +66,6 @@ pub(crate) fn svgs_to_pdf_bytes(
 ) -> Result<Vec<u8>, anyhow::Error> {
     let page_width = config.size.0;
     let page_height = config.size.1;
-    assert!(page_width > config.margin * 2.);
-    assert!(page_height > config.margin * 2.);
 
     let svg_transform = svg_transform(&config);
     let doc_name = doc_name(&svgs, patient_name)?;
@@ -87,12 +85,16 @@ pub(crate) fn svgs_to_pdf_bytes(
 
         pages.push(PdfPage::new(page_width, page_height, ops));
     }
+    if pages.is_empty() {
+        return Err(PdfError::EmptyPages.into());
+    }
 
-    assert!(pages.len() > 0);
     let bytes = doc
         .with_pages(pages)
         .save(&PdfSaveOptions::default(), &mut Vec::new());
-    assert!(bytes.len() > 0);
+    if bytes.is_empty() {
+        return Err(PdfError::EmptyBytes.into());
+    }
 
     Ok(bytes)
 }
