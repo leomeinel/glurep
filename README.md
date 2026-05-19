@@ -23,14 +23,15 @@ Only `DAY`, `TIME` and `UDT_CGMS` are processed.
 ## Usage
 
 ```
-Usage: glurep [OPTIONS] <INPUT_FILE> <OUTPUT_FILE>
+Usage: glurep [OPTIONS] <INPUT_FILE> <OUTPUT_PATH>
 
 Arguments:
   <INPUT_FILE>   Input file (csv)
-  <OUTPUT_FILE>  Output file (pdf) [default] or directory if using `--svg`
+  <OUTPUT_PATH>  Output file (pdf) [default] or directory if using `--svg`
 
 Options:
   -s, --svg                              Output svgs instead of pdf
+  -f, --force                            Force overwrite files
   -n, --name [<patient_name>]            Patient name [default: Patient]
       --width [<width>]                  Width of the output pdf in `mm`
       --height [<height>]                Height of the output pdf in `mm`

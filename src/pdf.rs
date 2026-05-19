@@ -2,8 +2,7 @@ pub(crate) mod prelude {
     pub(crate) use super::{PageConfig, svgs_to_pdf_bytes};
 }
 
-use std::error::Error;
-
+use anyhow::anyhow;
 use clap::ArgMatches;
 use itertools::Itertools as _;
 use jiff::civil::Date;
@@ -64,19 +63,20 @@ pub(crate) fn svgs_to_pdf_bytes(
     svgs: Vec<SvgData>,
     config: PageConfig,
     patient_name: &str,
-) -> Result<Vec<u8>, Box<dyn Error>> {
+) -> Result<Vec<u8>, anyhow::Error> {
     let page_width = config.size.0;
     let page_height = config.size.1;
     assert!(page_width > config.margin * 2.);
     assert!(page_height > config.margin * 2.);
 
     let svg_transform = svg_transform(&config);
-    let doc_name = doc_name(&svgs, patient_name);
+    let doc_name = doc_name(&svgs, patient_name)?;
     let mut doc = PdfDocument::new(doc_name.as_str());
 
     let mut pages = Vec::new();
     for svg_data in svgs {
-        let svg = Svg::parse(svg_data.contents.as_str(), &mut Vec::new())?;
+        let svg =
+            Svg::parse(svg_data.contents.as_str(), &mut Vec::new()).map_err(|e| anyhow!(e))?;
         let id = doc.add_xobject(&svg);
         let mut ops = Vec::new();
         ops.extend_from_slice(&header(&config, &svg_data.date, patient_name));
@@ -163,12 +163,13 @@ fn svg_transform(config: &PageConfig) -> XObjectTransform {
 }
 
 /// Name for a [`PdfDocument`] from `svgs` for `patient_name`.
-fn doc_name(svgs: &Vec<SvgData>, patient_name: &str) -> String {
-    let (min_date, max_date) = svgs
-        .iter()
-        .minmax()
-        .into_option()
-        .expect(ERR_INVALID_READINGS);
+fn doc_name(svgs: &Vec<SvgData>, patient_name: &str) -> Result<String, anyhow::Error> {
+    let Some((min_date, max_date)) = svgs.iter().minmax().into_option() else {
+        return Err(PdfError::MinMaxErrorReadings.into());
+    };
 
-    format!("{}: {} - {}", patient_name, min_date.date, max_date.date)
+    Ok(format!(
+        "{}: {} - {}",
+        patient_name, min_date.date, max_date.date
+    ))
 }

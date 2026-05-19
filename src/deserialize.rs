@@ -10,7 +10,6 @@ pub(crate) mod prelude {
 
 use std::{
     collections::{HashMap, HashSet},
-    error::Error,
     path::PathBuf,
 };
 
@@ -48,7 +47,7 @@ struct SiDiaryRecord {
 }
 
 /// Deserialize csv at `input_path` and construct [`GlucoseReadingsMap`].
-pub(crate) fn readings_map(input_path: &PathBuf) -> Result<GlucoseReadingsMap, Box<dyn Error>> {
+pub(crate) fn readings_map(input_path: &PathBuf) -> Result<GlucoseReadingsMap, anyhow::Error> {
     let mut readings_map: GlucoseReadingsMap = GlucoseReadingsMap::default();
 
     let mut reader = ReaderBuilder::new().delimiter(b';').from_path(input_path)?;

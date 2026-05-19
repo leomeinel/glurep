@@ -120,6 +120,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "anyhow"
+version = "1.0.102"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7f202df86484c868dbad7eaa557ef785d5c66295e41b460ef922eca0723b842c"
+
+[[package]]
 name = "approx"
 version = "0.3.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -820,6 +826,7 @@ checksum = "5ca63cb2488b847c12d1ca56034ba0f15613972c0dc0f8a957f525707567b23d"
 name = "glurep"
 version = "0.3.1"
 dependencies = [
+ "anyhow",
  "clap",
  "csv",
  "itertools 0.14.0",
@@ -827,6 +834,7 @@ dependencies = [
  "plotters",
  "printpdf",
  "serde",
+ "thiserror",
 ]
 
 [[package]]

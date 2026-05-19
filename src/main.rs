@@ -1,8 +1,14 @@
-use std::{env, error::Error, fs, path::PathBuf};
+/*
+ * Heavily inspired by:
+ * - https://doc.rust-lang.org/book/ch09-02-recoverable-errors-with-result.html
+ */
 
+use std::{env, fs, path::PathBuf};
+
+use anyhow::Context;
 use clap::{ArgMatches, arg, command, value_parser};
 
-use crate::{deserialize::prelude::*, pdf::prelude::*, plot::prelude::*};
+use crate::{deserialize::prelude::*, log::prelude::*, pdf::prelude::*, plot::prelude::*};
 
 mod deserialize;
 mod log;
@@ -10,28 +16,44 @@ mod pdf;
 mod plot;
 mod utils;
 
-fn main() -> Result<(), Box<dyn Error>> {
+fn main() -> Result<(), anyhow::Error> {
     let args = arg_matches();
-    let is_svg = args.get_one::<bool>("svg").unwrap();
-    let input_path = args.get_one::<PathBuf>("INPUT_FILE").unwrap();
-    assert!(input_path.is_file());
-    let output_path = args.get_one::<PathBuf>("OUTPUT_FILE").unwrap();
-    let patient_name = args.get_one::<String>("patient_name").unwrap();
+    let use_svg = *args.get_one::<bool>("use_svg").unwrap();
+    let use_force = *args.get_one::<bool>("use_force").unwrap();
+    let input_path = args.get_one::<PathBuf>("INPUT_FILE").unwrap().clone();
+    let output_path = args.get_one::<PathBuf>("OUTPUT_PATH").unwrap().clone();
+    let patient_name = args.get_one::<String>("patient_name").unwrap().as_str();
     let plot_config = PlotConfig::from(&args);
     let page_config = PageConfig::from(&args);
 
-    let readings_map = readings_map(input_path)?;
-    let svgs = plot_to_strings(&readings_map, &plot_config)?;
+    let readings_map = readings_map(&input_path)
+        .context(format!("Failed to deserialize `{}`", input_path.display()))?;
+    let svgs = plot_to_strings(&readings_map, &plot_config)
+        .context(format!("Failed to plot `{}`", input_path.display()))?;
 
-    if *is_svg {
-        assert!(output_path.is_dir());
+    if use_svg {
+        if !output_path.is_dir() {
+            return Err(FlagError::IoErrorNotADirectory(output_path).into());
+        }
+
         for svg in svgs {
             let file_name = format!("{}.svg", svg.date);
             let output_path = output_path.join(file_name);
+            if !use_force && output_path.try_exists()? {
+                return Err(FlagError::IoErrorAlreadyExists(output_path).into());
+            }
+
             fs::write(output_path, svg.contents)?;
         }
     } else {
-        let pdf_bytes = svgs_to_pdf_bytes(svgs, page_config, patient_name.as_str())?;
+        if !use_force && output_path.try_exists()? {
+            return Err(FlagError::IoErrorAlreadyExists(output_path).into());
+        } else if output_path.is_dir() {
+            return Err(FlagError::IoErrorIsADirectory(output_path).into());
+        }
+
+        let pdf_bytes = svgs_to_pdf_bytes(svgs, page_config, patient_name)
+            .context(format!("Failed to create pdf `{}`", output_path.display()))?;
         fs::write(output_path, pdf_bytes)?;
     }
 
@@ -44,7 +66,12 @@ fn arg_matches() -> ArgMatches {
         .arg(
             arg!(-s --svg "Output svgs instead of pdf")
                 .value_parser(value_parser!(bool))
-                .id("svg"),
+                .id("use_svg"),
+        )
+        .arg(
+            arg!(-f --force "Force overwrite files")
+                .value_parser(value_parser!(bool))
+                .id("use_force"),
         )
         .arg(
             arg!(-n --name [patient_name] "Patient name")
@@ -124,7 +151,7 @@ fn arg_matches() -> ArgMatches {
         )
         .arg(
             arg!(
-                <OUTPUT_FILE> "Output file (pdf) [default] or directory if using `--svg`"
+                <OUTPUT_PATH> "Output file (pdf) [default] or directory if using `--svg`"
             )
             .value_parser(value_parser!(PathBuf)),
         )

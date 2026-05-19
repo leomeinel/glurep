@@ -11,6 +11,7 @@ readme = "README.md"
 exclude = ["assets/*", "static/*"]
 
 [dependencies]
+anyhow = "1.0.102"
 clap = { version = "4.6.1", features = ["cargo"] }
 csv = "1.4.0"
 itertools = "0.14.0"
@@ -18,6 +19,7 @@ jiff = {version = "0.2.24", default-features = false, features = ["std", "alloc"
 plotters = { version = "0.3.7" , default-features = false, features = ["svg_backend", "full_palette", "all_series"]}
 printpdf = {version = "0.9.1", default-features = false, features = ["svg"]}
 serde = { version ="1.0.228", features = ["derive"] }
+thiserror = "2.0.18"
 
 # Disable optimizations in the dev profile to allow debugging.
 [profile.dev]

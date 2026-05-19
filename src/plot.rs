@@ -2,7 +2,7 @@ pub(crate) mod prelude {
     pub(crate) use super::{PlotConfig, SVG_SIZE, SvgData, plot_to_strings};
 }
 
-use std::{cmp::Ordering, collections::HashSet, error::Error, ops::Range};
+use std::{cmp::Ordering, collections::HashSet, ops::Range};
 
 use clap::ArgMatches;
 use jiff::{
@@ -136,7 +136,7 @@ impl Ord for SvgData {
 pub(crate) fn plot_to_strings(
     readings_map: &GlucoseReadingsMap,
     config: &PlotConfig,
-) -> Result<Vec<SvgData>, Box<dyn Error>> {
+) -> Result<Vec<SvgData>, anyhow::Error> {
     let mut svgs = Vec::new();
     for (date, readings) in &readings_map.0 {
         let mut svg = String::new();
@@ -155,10 +155,11 @@ pub(crate) fn plot_to_strings(
                 .label_style(PLOTTING_FONT)
                 // FIXME: We should use fixed positions/deltas for labels. I however haven't found a way to do that.
                 .x_labels(config.num_labels.0)
+                // FIXME: Returning a Result here would be ideal, but `ChartContext::format_x` can only be modified with this.
                 .x_label_formatter(&|x| {
                     Time::midnight()
                         .checked_add(Span::new().seconds(*x))
-                        .expect(ERR_INVALID_TIME)
+                        .expect(PLOT_ERR_INVALID_TIME)
                         .strftime("%H:%M")
                         .to_string()
                 })
