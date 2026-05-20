@@ -17,10 +17,7 @@ path = "src/main.rs"
 glurep_core = { workspace = true }
 
 anyhow = { workspace = true }
-rfd = { workspace = true, optional = true }
 winit = { workspace = true }
-xilem = { workspace = true, optional = true }
-xilem_web = { workspace = true, optional = true }
 
 [target.'cfg(all(not(target_family = "wasm"), not(target_os = "android"), not(target_os = "ios")))'.dependencies]
 rfd = { workspace = true }
