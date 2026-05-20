@@ -7,7 +7,7 @@ use xilem::{
     },
 };
 
-use crate::{ui::prelude::*, utils::prelude::*};
+use crate::ui::prelude::*;
 
 pub(super) const CONTAINER_GAP: Length = Length::const_px(12.0);
 pub(super) const ELEMENT_GAP: Length = Length::const_px(4.0);
@@ -172,34 +172,33 @@ pub(super) fn text_input_panel(state: &mut AppState) -> impl WidgetView<AppState
     .gap(CONTAINER_GAP)
 }
 
+// FIXME: Think about using `AsyncFileDialog` instead.
 pub(super) fn input_file_panel() -> impl WidgetView<AppState> + use<> {
-    flex_col((text_button("Open csv", |state: &mut AppState| {
+    flex_col((text_button("Select input file", |state: &mut AppState| {
         FileDialog::new()
             .add_filter("csv", &["csv"])
-            .set_directory(file_dialog_path())
             .pick_file()
-            .map(|p| state.input_file = p);
+            .map(|p| state.input_path = Some(p));
     }),))
     .cross_axis_alignment(CrossAxisAlignment::Start)
     .gap(CONTAINER_GAP)
 }
 
+// FIXME: Think about using `AsyncFileDialog` instead.
 pub(super) fn output_file_panel() -> impl WidgetView<AppState> + use<> {
     flex_col((
-        text_button("Save as pdf", |state: &mut AppState| {
+        text_button("Export PDF to…", |state: &mut AppState| {
             FileDialog::new()
                 .set_file_name("output.pdf")
-                .set_directory(file_dialog_path())
                 .save_file()
-                .map(|p| state.output_file = p);
+                .map(|p| state.output_path = Some(p));
         }),
         FlexSpacer::Fixed(ELEMENT_GAP),
-        text_button("Save as svg", |state: &mut AppState| {
+        text_button("Export SVGs to…", |state: &mut AppState| {
             FileDialog::new()
-                .set_file_name("output.svg")
-                .set_directory(file_dialog_path())
-                .save_file()
-                .map(|p| state.output_file = p);
+                .set_title("Select output directory")
+                .pick_folder()
+                .map(|p| state.output_path = Some(p));
         }),
     ))
     .cross_axis_alignment(CrossAxisAlignment::Start)
