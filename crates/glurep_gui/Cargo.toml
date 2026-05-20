@@ -19,7 +19,7 @@ glurep_core = { workspace = true }
 anyhow = { workspace = true }
 winit = { workspace = true }
 
-[target.'cfg(all(not(target_family = "wasm"), not(target_os = "android"), not(target_os = "ios")))'.dependencies]
+[target.'cfg(not(any(target_family = "wasm", target_os = "android", target_os = "ios")))'.dependencies]
 rfd = { workspace = true }
 xilem = { workspace = true }
 
