@@ -22,9 +22,13 @@ winit = { workspace = true }
 xilem = { workspace = true, optional = true }
 xilem_web = { workspace = true, optional = true }
 
-[features]
-# FIXME: Just use target os, not features!
-default = ["desktop"]
-desktop = ["dep:rfd", "dep:xilem"]
-web = ["dep:rfd", "dep:xilem_web"]
-mobile = ["dep:xilem"]
+[target.'cfg(all(not(target_family = "wasm"), not(target_os = "android"), not(target_os = "ios")))'.dependencies]
+rfd = { workspace = true }
+xilem = { workspace = true }
+
+[target.'cfg(all(target_family = "wasm", any(target_os = "unknown", target_os = "none")))'.dependencies]
+rfd = { workspace = true }
+xilem_web = { workspace = true }
+
+[target.'cfg(any(target_os = "android", target_os = "ios"))'.dependencies]
+xilem = { workspace = true }
