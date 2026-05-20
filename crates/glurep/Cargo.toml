@@ -3,24 +3,14 @@ name = "glurep"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
-categories = ["gui", "science::bioinformatics", "visualization"]
-description = "GUI utility for generating pdf reports from glucose readings in supported csv formats."
+categories = ["command-line-utilities", "science::bioinformatics", "visualization"]
+description = "CLI utility for generating pdf reports from glucose readings in supported csv formats."
 authors.workspace = true
 repository.workspace = true
 readme = "README.md"
 
 [dependencies]
-glurep_core = { workspace = true }
+glurep_core = { workspace = true, features = ["cli"] }
 
 anyhow = { workspace = true }
-rfd = { workspace = true, optional = true }
-winit = { workspace = true }
-xilem = { workspace = true, optional = true }
-xilem_web = { workspace = true, optional = true }
-
-[features]
-# FIXME: Just use target os, not features!
-default = ["desktop"]
-desktop = ["dep:rfd", "dep:xilem"]
-web = ["dep:rfd", "dep:xilem_web"]
-mobile = ["dep:xilem"]
+clap = { workspace = true }
