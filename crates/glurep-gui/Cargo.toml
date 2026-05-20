@@ -1,5 +1,5 @@
 [package]
-name = "glurep_gui"
+name = "glurep-gui"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
@@ -8,10 +8,6 @@ description = "GUI utility for generating pdf reports from glucose readings in s
 authors.workspace = true
 repository.workspace = true
 readme = "README.md"
-
-[[bin]]
-name = "glurep-gui"
-path = "src/main.rs"
 
 [dependencies]
 glurep_core = { workspace = true }
