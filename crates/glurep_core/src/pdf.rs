@@ -59,7 +59,7 @@ impl Default for PageConfig {
 /// [`PdfDocument`] from `svgs` as bytes.
 pub fn svgs_to_pdf_bytes(
     svgs: Vec<SvgData>,
-    config: PageConfig,
+    config: &PageConfig,
     patient_name: &str,
 ) -> Result<Vec<u8>, anyhow::Error> {
     let page_width = config.size.0;
