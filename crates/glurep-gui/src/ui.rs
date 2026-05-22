@@ -145,16 +145,19 @@ pub(crate) fn app_logic(state: &mut AppState) -> impl WidgetView<AppState> + use
                 },
                 |state: &mut AppState, ()| {
                     if state.should_redraw_svg() {
-                        // FIXME: Do not use unwrap
-                        state.update_svgs().unwrap();
-                        // FIXME: Do not use unwrap
-                        state.update_svg_tree().unwrap()
+                        if let Err(e) = state.update_svgs() {
+                            eprintln!("Error: {}", e);
+                        }
+                        if let Err(e) = state.update_svg_tree() {
+                            eprintln!("Error: {}", e);
+                        }
                     }
                 },
             ),
             // FIXME: Make this async
-            // FIXME: Do not use unwrap
-            state.write_files().unwrap(),
+            if let Err(e) = state.write_files() {
+                eprintln!("Error: {}", e)
+            },
         ),
     )
 }
