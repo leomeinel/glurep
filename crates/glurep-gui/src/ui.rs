@@ -132,18 +132,18 @@ pub(crate) fn app_logic(state: &mut AppState) -> impl WidgetView<AppState> + use
     fork(
         root_view(state),
         (
-            // FIXME: Make this async
             task(
                 |proxy, _| async move {
                     let mut interval = time::interval(Duration::from_millis(200));
                     loop {
                         interval.tick().await;
-                        let Ok(()) = proxy.message(()) else {
+                        if proxy.message(()).is_err() {
                             break;
                         };
                     }
                 },
-                |state: &mut AppState, ()| {
+                // FIXME: Make this async
+                |state: &mut AppState, _| {
                     if state.should_redraw_svg() {
                         if let Err(e) = state.update_svgs() {
                             eprintln!("Error: {}", e);
