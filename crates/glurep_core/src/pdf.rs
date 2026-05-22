@@ -16,7 +16,7 @@ use crate::{log::prelude::*, plot::prelude::*};
 const PX_INTO_PT_DPI: f32 = 25.4;
 
 /// Config for plotting an svg to a page.
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct PageConfig {
     /// Page size `(x, y)`.
     pub size: (Mm, Mm),
@@ -58,7 +58,7 @@ impl Default for PageConfig {
 
 /// [`PdfDocument`] from `svgs` as bytes.
 pub fn svgs_to_pdf_bytes(
-    svgs: Vec<SvgData>,
+    svgs: &[SvgData],
     config: &PageConfig,
     patient_name: &str,
 ) -> Result<Vec<u8>, anyhow::Error> {
@@ -163,7 +163,7 @@ fn svg_transform(config: &PageConfig) -> XObjectTransform {
 }
 
 /// Name for a [`PdfDocument`] from `svgs` for `patient_name`.
-fn doc_name(svgs: &Vec<SvgData>, patient_name: &str) -> Result<String, anyhow::Error> {
+fn doc_name(svgs: &[SvgData], patient_name: &str) -> Result<String, anyhow::Error> {
     let Some((min_date, max_date)) = svgs.iter().minmax().into_option() else {
         return Err(PdfError::MinMaxErrorReadings.into());
     };

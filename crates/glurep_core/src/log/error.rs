@@ -14,21 +14,21 @@ pub enum FlagError {
     IoErrorIsADirectory(PathBuf),
 }
 
-/// [`Errors`](thiserror::Error) encountered in [`crate::deserialize`].
+/// [`Errors`](thiserror::Error) encountered while deserializing `csv`.
 #[derive(thiserror::Error, Debug)]
 pub enum DeserializeError {
     #[error("Failed to read any valid entries from csv.")]
     EmptyGlucoseReadingsMap,
 }
 
-/// [`Errors`](thiserror::Error) encountered in [`crate::plot`].
+/// [`Errors`](thiserror::Error) encountered while plotting `csv`.
 #[derive(thiserror::Error, Debug)]
 pub enum PlotError {
-    #[error("Failed to construct svgs.")]
-    EmptySvgs,
+    #[error("Failed to construct svgs. Less svgs were detected than expected.")]
+    InsufficientSvgs,
 }
 
-/// [`Errors`](thiserror::Error) encountered in [`crate::pdf`].
+/// [`Errors`](thiserror::Error) encountered while creating `pdf`.
 #[derive(thiserror::Error, Debug)]
 pub enum PdfError {
     #[error("Failed to serialize pdf document to bytes.")]

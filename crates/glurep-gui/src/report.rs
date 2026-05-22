@@ -1,56 +1,45 @@
 pub(crate) mod prelude {
-    pub(crate) use super::{export_pdf, export_svgs};
+    pub(crate) use super::{svg_data, write_pdf, write_svgs};
 }
 use std::{fs, path::PathBuf};
 
 use anyhow::Context as _;
 use glurep_core::prelude::*;
 
-use crate::ui::prelude::*;
-
-pub(crate) fn export_pdf(
-    state: &AppState,
-    input_path: &PathBuf,
+/// Write pdf from `svgs` to a file.
+pub(crate) fn write_pdf(
+    page_config: &PageConfig,
     output_path: &PathBuf,
+    svgs: &[SvgData],
+    patient_name: &str,
 ) -> Result<(), anyhow::Error> {
-    let pdf_bytes = pdf_bytes(state, input_path, output_path)?;
-    fs::write(&output_path, pdf_bytes)?;
-
-    Ok(())
-}
-
-pub(crate) fn export_svgs(
-    state: &AppState,
-    input_path: &PathBuf,
-    output_path: &PathBuf,
-) -> Result<(), anyhow::Error> {
-    let svgs = svg_strings(&state.plot_config, input_path)?;
-    for svg in svgs {
-        let file_name = format!("{}.svg", svg.date);
-        let output_path = output_path.join(file_name);
-        fs::write(output_path, svg.contents)?;
-    }
-
-    Ok(())
-}
-
-fn pdf_bytes(
-    state: &AppState,
-    input_path: &PathBuf,
-    output_path: &PathBuf,
-) -> Result<Vec<u8>, anyhow::Error> {
-    let page_config = &state.page_config;
     let total_margin = page_config.margin * 2.;
     if total_margin > page_config.size.0 || total_margin > page_config.size.1 {
         return Err(PdfError::PageConfigMarginExceedsSize.into());
     }
 
-    let svgs = svg_strings(&state.plot_config, input_path)?;
-    svgs_to_pdf_bytes(svgs, &page_config, &state.patient_name)
-        .context(format!("Failed to create pdf `{}`", output_path.display()))
+    let pdf_bytes = svgs_to_pdf_bytes(svgs, &page_config, patient_name)
+        .context(format!("Failed to create pdf `{}`", output_path.display()))?;
+    fs::write(&output_path, pdf_bytes)?;
+
+    Ok(())
 }
 
-fn svg_strings(
+/// Write all `svgs` to multiple files.
+///
+/// The file name will contain the date.
+pub(crate) fn write_svgs(output_path: &PathBuf, svgs: &[SvgData]) -> Result<(), anyhow::Error> {
+    for svg in svgs {
+        let file_name = format!("{}.svg", svg.date);
+        let output_path = output_path.join(file_name);
+        fs::write(output_path, &svg.contents)?;
+    }
+
+    Ok(())
+}
+
+/// Generate [`Vec<SvgData>`] from deserialized `csv` at `input_pat`.
+pub(crate) fn svg_data(
     plot_config: &PlotConfig,
     input_path: &PathBuf,
 ) -> Result<Vec<SvgData>, anyhow::Error> {

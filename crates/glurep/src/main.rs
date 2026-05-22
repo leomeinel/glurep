@@ -50,7 +50,7 @@ fn main() -> Result<(), anyhow::Error> {
             return Err(FlagError::IoErrorIsADirectory(output_path).into());
         }
 
-        let pdf_bytes = svgs_to_pdf_bytes(svgs, &page_config, patient_name)
+        let pdf_bytes = svgs_to_pdf_bytes(&svgs, &page_config, patient_name)
             .context(format!("Failed to create pdf `{}`", output_path.display()))?;
         fs::write(output_path, pdf_bytes)?;
     }

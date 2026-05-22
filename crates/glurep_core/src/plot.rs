@@ -30,7 +30,7 @@ const X_SPEC: Range<u32> = 0..(24 * 3600);
 const Y_DESC: &str = "mg/dL";
 
 /// Config for plotting [`GlucoseReadingsMap`] to svg.
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct PlotConfig {
     /// `y` axis spec in `mg/dL`.
     pub y_spec: Range<u32>,
@@ -197,7 +197,7 @@ pub fn plot_to_strings(
         svgs.push(SvgData::new(date, svg));
     }
     if svgs.is_empty() {
-        return Err(PlotError::EmptySvgs.into());
+        return Err(PlotError::InsufficientSvgs.into());
     }
     svgs.sort();
 
