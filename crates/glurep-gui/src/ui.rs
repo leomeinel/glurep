@@ -63,7 +63,7 @@ pub(crate) struct AppState {
     pub(crate) svg_pagination: SvgPagination,
 }
 impl AppState {
-    /// Returns true if the `svg` should be redrawn.
+    /// Returns whether the `svg` should be redrawn.
     fn should_redraw_svg(&self) -> bool {
         self.last_plot_config
             .as_ref()
