@@ -1,4 +1,3 @@
-mod report;
 mod ui;
 
 use xilem::{EventLoop, WindowOptions, Xilem};

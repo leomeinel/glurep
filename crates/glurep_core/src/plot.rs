@@ -115,7 +115,7 @@ impl From<&ArgMatches> for PlotConfig {
 }
 
 /// Relevant data for svg.
-#[derive(PartialEq, Eq, PartialOrd)]
+#[derive(PartialEq, Eq, PartialOrd, Debug)]
 pub struct SvgData {
     pub date: Date,
     pub contents: String,
@@ -197,7 +197,7 @@ pub fn plot_to_strings(
         svgs.push(SvgData::new(date, svg));
     }
     if svgs.is_empty() {
-        return Err(PlotError::InsufficientSvgs.into());
+        return Err(PlotError::EmptySvgs.into());
     }
     svgs.sort();
 

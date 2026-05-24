@@ -79,19 +79,18 @@ impl AppState {
             && let Some(svgs) = self.svg_pagination.svgs.as_ref()
         {
             if output_path.is_dir() {
-                write_svgs(output_path, svgs)?;
+                for svg in svgs {
+                    let file_name = format!("{}.svg", svg.date);
+                    let output_path = output_path.join(file_name);
+                    fs::write(output_path, &svg.contents)?;
+                }
             } else {
-                write_pdf(
-                    &self.page_config,
-                    output_path,
-                    svgs,
-                    self.patient_name.as_str(),
-                )?;
+                let pdf_bytes =
+                    svgs_to_pdf_bytes(svgs, &self.page_config, self.patient_name.as_str())
+                        .context(format!("Failed to create pdf `{}`", output_path.display()))?;
+                fs::write(&output_path, pdf_bytes)?;
             }
-        } else if self.output_path.is_some() {
-            todo!("Show warning");
         }
-
         // NOTE: Reset `output_path` to only export once just after closing the `FileDialog`.
         self.output_path = None;
 

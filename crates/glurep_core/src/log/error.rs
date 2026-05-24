@@ -24,8 +24,8 @@ pub enum DeserializeError {
 /// [`Errors`](thiserror::Error) encountered while plotting `csv`.
 #[derive(thiserror::Error, Debug)]
 pub enum PlotError {
-    #[error("Failed to construct svgs. Less svgs were detected than expected.")]
-    InsufficientSvgs,
+    #[error("Failed to construct svgs.")]
+    EmptySvgs,
 }
 
 /// [`Errors`](thiserror::Error) encountered while creating `pdf`.

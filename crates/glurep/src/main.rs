@@ -19,11 +19,6 @@ fn main() -> Result<(), anyhow::Error> {
     let plot_config = PlotConfig::from(&args);
     let page_config = PageConfig::from(&args);
 
-    let total_margin = page_config.margin * 2.;
-    if total_margin > page_config.size.0 || total_margin > page_config.size.1 {
-        return Err(PdfError::PageConfigMarginExceedsSize.into());
-    }
-
     let readings_map = readings_map(&input_path)
         .context(format!("Failed to deserialize `{}`", input_path.display()))?;
     let svgs = plot_to_strings(&readings_map, &plot_config)

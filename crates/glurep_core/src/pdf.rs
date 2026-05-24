@@ -62,6 +62,11 @@ pub fn svgs_to_pdf_bytes(
     config: &PageConfig,
     patient_name: &str,
 ) -> Result<Vec<u8>, anyhow::Error> {
+    let total_margin = config.margin * 2.;
+    if total_margin > config.size.0 || total_margin > config.size.1 {
+        return Err(PdfError::PageConfigMarginExceedsSize.into());
+    }
+
     let page_width = config.size.0;
     let page_height = config.size.1;
 
