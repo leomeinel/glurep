@@ -7,13 +7,14 @@ pub(crate) mod prelude {
 mod palette;
 mod widgets;
 
-use std::{path::PathBuf, sync::Arc, time::Duration};
+use std::{fs, path::PathBuf, sync::Arc, time::Duration};
 
+use anyhow::Context as _;
 use glurep_core::prelude::*;
 use usvg::Tree;
 use xilem::{WidgetView, core::fork, tokio::time, view::task};
 
-use crate::{report::prelude::*, ui::prelude::*};
+use crate::ui::prelude::*;
 
 /// Enum representation of a tab containing configuration views.
 #[repr(usize)]
@@ -27,11 +28,10 @@ pub(crate) enum ConfigTab {
 }
 
 /// Pagination data for `svg` view.
+#[derive(Debug)]
 pub(crate) struct SvgPagination {
     /// Current page index.
     pub(crate) index: usize,
-    /// Last page index.
-    pub(crate) last_index: Option<usize>,
     /// [`SvgData`] cache.
     pub(crate) svgs: Option<Vec<SvgData>>,
     /// [`Tree`] that gets displayed in an `svg` view.
@@ -43,7 +43,6 @@ impl Default for SvgPagination {
 
         Self {
             index: Default::default(),
-            last_index: Default::default(),
             svgs: Default::default(),
             tree,
         }
@@ -51,28 +50,17 @@ impl Default for SvgPagination {
 }
 
 /// Main state used while running the app.
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub(crate) struct AppState {
     pub(crate) tab: ConfigTab,
     pub(crate) input_path: Option<PathBuf>,
     pub(crate) output_path: Option<PathBuf>,
     pub(crate) patient_name: String,
     pub(crate) plot_config: PlotConfig,
-    pub(crate) last_plot_config: Option<PlotConfig>,
     pub(crate) page_config: PageConfig,
     pub(crate) svg_pagination: SvgPagination,
 }
 impl AppState {
-    /// Returns whether the `svg` should be redrawn.
-    fn should_redraw_svg(&self) -> bool {
-        self.last_plot_config
-            .as_ref()
-            .is_none_or(|p| &self.plot_config != p)
-            || self
-                .svg_pagination
-                .last_index
-                .is_none_or(|o| o != self.svg_pagination.index)
-    }
     /// Write files to either `pdf` or a directory of `svgs` according to `output_path`.
     fn write_files(&mut self) -> Result<(), anyhow::Error> {
         if let Some(output_path) = self.output_path.as_ref()
@@ -96,31 +84,28 @@ impl AppState {
 
         Ok(())
     }
-    /// Update [`svgs`](SvgPagination::svgs).
-    fn update_svgs(&mut self) -> Result<(), anyhow::Error> {
-        if let Some(input_path) = self.input_path.as_ref() {
-            self.svg_pagination.svgs = Some(svg_data(&self.plot_config, input_path)?);
-        }
 
-        Ok(())
-    }
-    /// Update [`svg tree`](SvgPagination::tree).
-    fn update_svg_tree(&mut self) -> Result<(), anyhow::Error> {
-        if let Some(svgs) = self.svg_pagination.svgs.as_ref() {
-            let mut options = usvg::Options::default();
-            options.fontdb_mut().load_system_fonts();
-            let Some(svg) = svgs.get(self.svg_pagination.index) else {
-                return Err(PlotError::InsufficientSvgs.into());
-            };
-            let svg_contents = svg.contents.as_str();
+    /// Data needed for displaying svgs.
+    ///
+    /// [`SvgPagination::svgs`] and [`SvgPagination::tree`] can be updated from this.
+    fn svg_display_data(
+        &self,
+        opt: Arc<usvg::Options<'_>>,
+    ) -> Result<Option<(Vec<SvgData>, Tree)>, anyhow::Error> {
+        let Some(input_path) = self.input_path.as_ref() else {
+            return Ok(None);
+        };
+        let readings_map = readings_map(input_path)
+            .context(format!("Failed to deserialize `{}`", input_path.display()))?;
+        let svgs = plot_to_strings(&readings_map, &self.plot_config)
+            .context(format!("Failed to plot `{}`", input_path.display()))?;
 
-            self.svg_pagination.tree = Arc::new(Tree::from_str(svg_contents, &options)?);
+        let Some(svg) = svgs.get(self.svg_pagination.index) else {
+            return Ok(None);
+        };
+        let svg_tree = Tree::from_str(svg.contents.as_str(), &opt)?;
 
-            self.last_plot_config = Some(self.plot_config.clone());
-            self.svg_pagination.last_index = Some(self.svg_pagination.index);
-        }
-
-        Ok(())
+        Ok(Some((svgs, svg_tree)))
     }
 }
 
@@ -133,27 +118,28 @@ pub(crate) fn app_logic(state: &mut AppState) -> impl WidgetView<AppState> + use
         (
             task(
                 |proxy, _| async move {
-                    let mut interval = time::interval(Duration::from_millis(200));
+                    let mut interval = time::interval(Duration::from_millis(250));
+
+                    let mut opt = usvg::Options::default();
+                    opt.fontdb_mut().load_system_fonts();
+                    let opt = Arc::new(opt);
+
                     loop {
                         interval.tick().await;
-                        if proxy.message(()).is_err() {
+                        if proxy.message(opt.clone()).is_err() {
                             break;
                         };
                     }
                 },
-                // FIXME: Make this async
-                |state: &mut AppState, _| {
-                    if state.should_redraw_svg() {
-                        if let Err(e) = state.update_svgs() {
-                            eprintln!("Error: {}", e);
-                        }
-                        if let Err(e) = state.update_svg_tree() {
-                            eprintln!("Error: {}", e);
-                        }
+                |state: &mut AppState, opt| match state.svg_display_data(opt) {
+                    Ok(Some((svgs, svg_tree))) => {
+                        state.svg_pagination.svgs = Some(svgs);
+                        state.svg_pagination.tree = Arc::new(svg_tree);
                     }
+                    Err(e) => eprintln!("Error: {}", e),
+                    _ => (),
                 },
             ),
-            // FIXME: Make this async
             if let Err(e) = state.write_files() {
                 eprintln!("Error: {}", e)
             },
