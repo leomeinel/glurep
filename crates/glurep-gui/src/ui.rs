@@ -116,6 +116,9 @@ pub(crate) fn app_logic(state: &mut AppState) -> impl WidgetView<AppState> + use
     fork(
         root_view(state),
         (
+            // FIXME: Find a way to only run this if state has changed without caching or having to set a trigger manually.
+            //        This currently produces a visual bug where points are sometimes rendered in front of neighboring ones,
+            //        other times behind because they are not necessarily rendered in the same order.
             task(
                 |proxy, _| async move {
                     let mut interval = time::interval(Duration::from_millis(250));
